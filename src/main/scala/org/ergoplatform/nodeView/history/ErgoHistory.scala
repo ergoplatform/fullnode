@@ -5,10 +5,10 @@ import java.io.File
 import io.iohk.iodb.{ByteArrayWrapper, LSMStore}
 import org.ergoplatform.mining.AutolykosPowScheme
 import org.ergoplatform.modifiers.history._
-import org.ergoplatform.modifiers.state.UTXOSnapshotChunk
+import org.ergoplatform.modifiers.state.{UtxoSnapshot, UtxoSnapshotChunk, UtxoSnapshotManifest}
 import org.ergoplatform.modifiers.{BlockSection, ErgoFullBlock, ErgoPersistentModifier}
-import org.ergoplatform.nodeView.history.storage.modifierprocessors._
-import org.ergoplatform.nodeView.history.storage.modifierprocessors.popow.{EmptyPoPoWProofsProcessor, FullPoPoWProofsProcessor}
+import org.ergoplatform.nodeView.history.modifierprocessors._
+import org.ergoplatform.nodeView.history.modifierprocessors.popow.{EmptyPoPoWProofsProcessor, FullPoPoWProofsProcessor}
 import org.ergoplatform.nodeView.history.storage.{FilesObjectsStore, HistoryStorage}
 import org.ergoplatform.settings._
 import scorex.core.consensus.History
@@ -57,8 +57,12 @@ trait ErgoHistory
           (this, process(section))
         case poPoWProof: PoPoWProof =>
           (this, process(poPoWProof))
-        case chunk: UTXOSnapshotChunk =>
+        case manifest: UtxoSnapshotManifest =>
+          (this, process(manifest))
+        case chunk: UtxoSnapshotChunk =>
           (this, process(chunk))
+        case localSnapshot: UtxoSnapshot =>
+          (this, process(localSnapshot))
       }
     }
   }
@@ -124,6 +128,7 @@ trait ErgoHistory
                 Seq.empty)
               this -> ProgressInfo[ErgoPersistentModifier](None, Seq.empty, Seq.empty, Seq.empty)
             } else {
+              // todo: last requirement could not be met in pruned full mode.
               val invalidatedChain: Seq[ErgoFullBlock] = bestFullBlockOpt.toSeq
                 .flatMap(f => headerChainBack(fullBlockHeight + 1, f.header, h => !invalidatedIds.contains(h.id)).headers)
                 .flatMap(h => getFullBlock(h))

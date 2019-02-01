@@ -11,7 +11,7 @@ import org.ergoplatform.nodeView.state.StateType.Utxo
 import org.ergoplatform.nodeView.state._
 import org.ergoplatform.nodeView.state.wrapped.WrappedUtxoState
 import org.ergoplatform.settings.{Algos, ErgoSettings}
-import org.ergoplatform.utils.{ErgoPropertyTest, NodeViewTestConfig, NodeViewTestOps, TestCase}
+import org.ergoplatform.utils._
 import scorex.core.NodeViewHolder.ReceivableMessages._
 import scorex.core.network.NodeViewSynchronizer.ReceivableMessages._
 import scorex.crypto.authds.{ADKey, SerializedAdProof}
@@ -19,7 +19,13 @@ import scorex.testkit.utils.NoShrink
 import scorex.util.ModifierId
 import sigmastate.Values
 
-class ErgoNodeViewHolderSpec extends ErgoPropertyTest with NodeViewTestOps with NoShrink {
+class ErgoNodeViewHolderSpec
+  extends ErgoPropertyTest
+    with ErgoTestConstants
+    with NodeViewTestOps
+    with NoShrink {
+
+  private val ergoSettings = settings
 
   private val t1 = TestCase("check genesis state") { fixture =>
     import fixture._

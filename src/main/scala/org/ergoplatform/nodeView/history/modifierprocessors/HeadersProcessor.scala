@@ -1,4 +1,4 @@
-package org.ergoplatform.nodeView.history.storage.modifierprocessors
+package org.ergoplatform.nodeView.history.modifierprocessors
 
 import com.google.common.primitives.Ints
 import io.iohk.iodb.ByteArrayWrapper
@@ -27,23 +27,23 @@ import scala.util.Try
   */
 trait HeadersProcessor extends ToDownloadProcessor with ScorexLogging with ScorexEncoding {
 
-  private val charsetName = "UTF-8"
+  val powScheme: AutolykosPowScheme
 
   protected val historyStorage: HistoryStorage
 
   protected val config: NodeConfigurationSettings
 
-  val powScheme: AutolykosPowScheme
+  lazy val difficultyCalculator = new LinearDifficultyControl(chainSettings.blockInterval,
+    chainSettings.useLastEpochs, chainSettings.epochLength)
 
   //Maximum time in future block header may contain
   protected lazy val MaxTimeDrift: Long = 10 * chainSettings.blockInterval.toMillis
 
-  lazy val difficultyCalculator = new LinearDifficultyControl(chainSettings.blockInterval,
-    chainSettings.useLastEpochs, chainSettings.epochLength)
+  protected val BestHeaderKey: ByteArrayWrapper = ByteArrayWrapper(Array.fill(HashLength)(Header.modifierTypeId))
 
-  def realDifficulty(h: Header): Difficulty = powScheme.realDifficulty(h)
+  protected val BestFullBlockKey: ByteArrayWrapper = ByteArrayWrapper(Array.fill(HashLength)(-1))
 
-  def isSemanticallyValid(modifierId: ModifierId): ModifierSemanticValidity
+  private val charsetName = "UTF-8"
 
   // todo for performance reasons we may just use key like s"score$id" but this will require to redownload blockchain
   protected def headerScoreKey(id: ModifierId): ByteArrayWrapper =
@@ -56,6 +56,10 @@ trait HeadersProcessor extends ToDownloadProcessor with ScorexLogging with Score
     ByteArrayWrapper(Algos.hash("validity".getBytes(charsetName) ++ idToBytes(id)))
 
   protected def bestHeaderIdOpt: Option[ModifierId] = historyStorage.getIndex(BestHeaderKey).map(w => bytesToId(w.data))
+
+  def realDifficulty(h: Header): Difficulty = powScheme.realDifficulty(h)
+
+  def isSemanticallyValid(modifierId: ModifierId): ModifierSemanticValidity
 
   /**
     * Id of best header with transactions and proofs. None in regime that do not process transactions
@@ -215,10 +219,6 @@ trait HeadersProcessor extends ToDownloadProcessor with ScorexLogging with Score
     */
   protected def validate(header: Header): Try[Unit] = new HeaderValidator().validate(header).toTry
 
-  protected val BestHeaderKey: ByteArrayWrapper = ByteArrayWrapper(Array.fill(HashLength)(Header.modifierTypeId))
-
-  protected val BestFullBlockKey: ByteArrayWrapper = ByteArrayWrapper(Array.fill(HashLength)(-1))
-
   /**
     * @param id - header id
     * @return score of header with such id if is in History
@@ -245,7 +245,7 @@ trait HeadersProcessor extends ToDownloadProcessor with ScorexLogging with Score
     * @return at most limit header back in history starting from startHeader and when condition until is not satisfied
     *         Note now it includes one header satisfying until condition!
     */
-  protected def headerChainBack(limit: Int, startHeader: Header, until: Header => Boolean): HeaderChain = {
+  def headerChainBack(limit: Int, startHeader: Header, until: Header => Boolean): HeaderChain = {
     @tailrec
     def loop(header: Header, acc: Seq[Header]): Seq[Header] = {
       if (acc.lengthCompare(limit) == 0 || until(header)) {

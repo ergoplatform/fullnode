@@ -49,7 +49,7 @@ case class Header(version: Version,
 
   lazy val transactionsId: ModifierId = BlockSection.computeId(BlockTransactions.modifierTypeId, id, transactionsRoot)
 
-  lazy val extensionId: ModifierId = BlockSection.computeId(Extension.modifierTypeId, id, extensionRoot)
+  def extensionId: ModifierId = BlockSection.computeId(Extension.modifierTypeId, id, extensionRoot)
 
   override def minerPk: EcPointType = powSolution.pk
 
@@ -126,6 +126,7 @@ object Header extends ApiCodecs {
     } yield Header(version, parentId, interlinks, adProofsRoot, stateRoot,
       transactionsRoot, timestamp, nBits, height, extensionHash, solutions, Algos.decode(votes).get)
   }
+
 }
 
 object HeaderSerializer extends Serializer[Header] {
@@ -141,7 +142,8 @@ object HeaderSerializer extends Serializer[Header] {
       h.extensionRoot,
       RequiredDifficulty.toBytes(h.nBits),
       Ints.toByteArray(h.height),
-      h.votes)
+      h.votes
+    )
 
   def bytesWithoutPow(h: Header): Array[Byte] = {
     @SuppressWarnings(Array("TraversableHead"))
@@ -206,5 +208,5 @@ object HeaderSerializer extends Serializer[Header] {
         nBits, height, extensionHash, powSolution, votes, Some(bytes.length))
     }
   }.flatten
-  
+
 }

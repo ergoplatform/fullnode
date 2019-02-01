@@ -3,9 +3,11 @@ package org.ergoplatform.nodeView.state
 import java.util.concurrent.Executors
 
 import io.iohk.iodb.ByteArrayWrapper
+import org.ergoplatform.local.SnapshotCreator
 import org.ergoplatform.modifiers.ErgoFullBlock
 import org.ergoplatform.modifiers.history.{ADProofs, BlockTransactions, Extension, Header}
 import org.ergoplatform.modifiers.mempool.ErgoTransaction
+import org.ergoplatform.modifiers.state.{UtxoSnapshot, UtxoSnapshotManifestSerializer}
 import org.ergoplatform.nodeView.history.ErgoHistory
 import org.ergoplatform.nodeView.state.wrapped.WrappedUtxoState
 import org.ergoplatform.utils.ErgoPropertyTest
@@ -16,7 +18,6 @@ import sigmastate.Values
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 import scala.util.{Random, Try}
-
 
 class UtxoStateSpecification extends ErgoPropertyTest with ErgoTransactionGenerators {
 
@@ -87,7 +88,7 @@ class UtxoStateSpecification extends ErgoPropertyTest with ErgoTransactionGenera
     Future {
       (0 until 1000) foreach { _ =>
         Try {
-          val boxes = stateReader.randomBox().toSeq
+          val boxes = stateReader.randomBox.toSeq
           val txs = validTransactionsFromBoxes(400, boxes, new Random)._1
           stateReader.proofsForTransactions(txs).get
         }
@@ -174,6 +175,15 @@ class UtxoStateSpecification extends ErgoPropertyTest with ErgoTransactionGenera
     }
   }
 
+  property("applyModifier() - valid utxo snapshot") {
+    val (us: UtxoState, _) = createUtxoState()
+    forAll(validUtxoSnapshotGen) { snapshot =>
+      UtxoSnapshotManifestSerializer.parseBytes(snapshot.manifest.bytes).get.validate(snapshot.lastHeaders.head) shouldBe 'success
+      val recoveredState = us.applyModifier(snapshot).get
+      java.util.Arrays.equals(recoveredState.rootHash, snapshot.lastHeaders.head.stateRoot) shouldBe true
+    }
+  }
+
   property("applyModifier() - valid full block") {
     forAll(boxesHolderGen) { bh =>
       val us = createUtxoState(bh)
@@ -209,6 +219,25 @@ class UtxoStateSpecification extends ErgoPropertyTest with ErgoTransactionGenera
     us.applyModifier(validBlock).isSuccess shouldBe true
   }
 
+  property("takeSnapshot() of utxo state and restore from it") {
+    val (us, bh) = createUtxoState()
+    val genesis = validFullBlock(parentOpt = None, us, bh)
+    val wusAfterGenesis = WrappedUtxoState(us, bh, stateConstants).applyModifier(genesis).get
+    val chain1block1 = validFullBlock(Some(genesis.header), wusAfterGenesis)
+
+    var (state, _) = createUtxoState()
+    state = state.applyModifier(genesis).get
+    state = state.applyModifier(chain1block1).get
+
+    val (manifest, chunks) = SnapshotCreator.takeSnapshot(state.persistentProver.avlProver, chain1block1.header)
+
+    var (recoveredState, _) = createUtxoState()
+
+    recoveredState = recoveredState.applyModifier(
+      UtxoSnapshot(manifest, chunks, Seq(chain1block1.header, genesis.header))).get
+
+    java.util.Arrays.equals(state.rootHash, recoveredState.rootHash) shouldBe true
+  }
 
   property("2 forks switching") {
     val (us, bh) = createUtxoState()
@@ -236,7 +265,6 @@ class UtxoStateSpecification extends ErgoPropertyTest with ErgoTransactionGenera
     state = state.rollbackTo(idToVersion(genesis.id)).get
     state = state.applyModifier(chain1block1).get
     state = state.applyModifier(chain1block2).get
-
   }
 
   property("rollback n blocks and apply again") {

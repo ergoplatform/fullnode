@@ -1,6 +1,8 @@
-package org.ergoplatform.nodeView.history.storage.modifierprocessors
+package org.ergoplatform.nodeView.history.modifierprocessors
 
 import org.ergoplatform.modifiers.history._
+import org.ergoplatform.modifiers.state.{UtxoSnapshot, UtxoSnapshotManifest}
+import org.ergoplatform.nodeView.history.storage.modifierprocessors.BasicReaders
 import org.ergoplatform.settings.{ChainSettings, NodeConfigurationSettings}
 import scorex.core.ModifierTypeId
 import scorex.core.utils.NetworkTimeProvider
@@ -13,6 +15,8 @@ import scala.annotation.tailrec
   */
 trait ToDownloadProcessor extends BasicReaders with ScorexLogging {
 
+  lazy val isPrunedFullMode: Boolean = config.blocksToKeep > 0 && !config.stateType.requireProofs
+
   protected val config: NodeConfigurationSettings
 
   protected val chainSettings: ChainSettings
@@ -22,13 +26,17 @@ trait ToDownloadProcessor extends BasicReaders with ScorexLogging {
   protected[history] lazy val pruningProcessor: FullBlockPruningProcessor =
     new FullBlockPruningProcessor(config, chainSettings)
 
+  protected def lastSnapshotAppliedHeight: Option[Int]
+
   protected def headerChainBack(limit: Int, startHeader: Header, until: Header => Boolean): HeaderChain
 
-  /** Returns true if we estimate that our chain is synced with the network. Start downloading full blocks after that
+  /**
+    * Returns true if we estimate that our chain is synced with the network. Start downloading full blocks after that
     */
   def isHeadersChainSynced: Boolean = pruningProcessor.isHeadersChainSynced
 
-  /** Returns Next `howMany` modifier ids satisfying `filter` condition our node should download
+  /**
+    * Returns Next `howMany` modifier ids satisfying `filter` condition our node should download
     * to synchronize full block chain with headers chain
     */
   def nextModifiersToDownload(howMany: Int, condition: ModifierId => Boolean): Seq[(ModifierTypeId, ModifierId)] = {
@@ -48,7 +56,8 @@ trait ToDownloadProcessor extends BasicReaders with ScorexLogging {
     }
 
     bestFullBlockOpt match {
-      case _ if !isHeadersChainSynced || !config.verifyTransactions =>
+      case _ if !isHeadersChainSynced || !config.verifyTransactions ||
+        (isPrunedFullMode && lastSnapshotAppliedHeight.isEmpty) =>
         Seq.empty
       case Some(fb) =>
         continuation(fb.header.height + 1, Seq.empty)
@@ -62,16 +71,26 @@ trait ToDownloadProcessor extends BasicReaders with ScorexLogging {
     */
   protected def toDownload(header: Header): Seq[(ModifierTypeId, ModifierId)] = {
     if (!config.verifyTransactions) {
-      // A regime that do not download and verify transaction
+      // A regime that do not download and verify transaction.
       Seq.empty
-    } else if (pruningProcessor.shouldDownloadBlockAtHeight(header.height)) {
+    } else if (pruningProcessor.shouldDownloadBlockAtHeight(header.height) &&
+      (!isPrunedFullMode || lastSnapshotAppliedHeight.exists(_ < header.height))) {
       // Already synced and header is not too far back. Download required modifiers.
       requiredModifiersForHeader(header)
     } else if (!isHeadersChainSynced && header.isNew(timeProvider, chainSettings.blockInterval * 5)) {
-      // Headers chain is synced after this header. Start downloading full blocks
+      // Headers chain is synced after this header. Start downloading full blocks.
       pruningProcessor.updateBestFullBlock(header)
-      log.info(s"Headers chain is likely synced after header ${header.encodedId} at height ${header.height}")
-      Seq.empty
+      if (isPrunedFullMode && lastSnapshotAppliedHeight.isEmpty) {
+        // Pruned full node regime with no snapshots applied yet -
+        // node should recover state before full blocks application.
+        val snapshotHeight = pruningProcessor.bestSnapshotHeight(header.height)
+        val snapshotIdOpt = headerIdsAtHeight(snapshotHeight).headOption
+          .flatMap(typedModifierById[Header])
+          .map(h => UtxoSnapshot.digestToId(h.stateRoot))
+        snapshotIdOpt.map(id => Seq((UtxoSnapshotManifest.modifierTypeId, id))).getOrElse(Seq.empty)
+      } else {
+        Seq.empty
+      }
     } else {
       Seq.empty
     }
@@ -86,4 +105,5 @@ trait ToDownloadProcessor extends BasicReaders with ScorexLogging {
       h.sectionIds.tail
     }
   }
+
 }

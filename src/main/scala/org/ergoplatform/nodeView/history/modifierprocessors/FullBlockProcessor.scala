@@ -1,9 +1,9 @@
-package org.ergoplatform.nodeView.history.storage.modifierprocessors
+package org.ergoplatform.nodeView.history.modifierprocessors
 
 import org.ergoplatform.modifiers.history._
 import org.ergoplatform.modifiers.{ErgoFullBlock, ErgoPersistentModifier}
 import org.ergoplatform.nodeView.history.ErgoHistory
-import org.ergoplatform.nodeView.history.storage.modifierprocessors.FullBlockProcessor.{BlockProcessing, ToProcess}
+import org.ergoplatform.nodeView.history.modifierprocessors.FullBlockProcessor.{BlockProcessing, ToProcess}
 import org.ergoplatform.settings.Algos
 import scorex.core.consensus.History.ProgressInfo
 import scorex.util.{ModifierId, bytesToId}
@@ -64,11 +64,11 @@ trait FullBlockProcessor extends HeadersProcessor {
   }
 
   private def processBetterChain: BlockProcessing = {
-    case toProcess@ToProcess(fullBlock, newModRow, newBestAfterThis, blocksToKeep, _)
-      if bestFullBlockOpt.nonEmpty && isBetterChain(newBestAfterThis.id) =>
+    case toProcess@ToProcess(fullBlock, newModRow, newBestBlock, blocksToKeep, _)
+      if bestFullBlockOpt.nonEmpty && isBetterChain(newBestBlock.id) =>
 
-      val prevBest = bestFullBlockOpt.get
-      val (prevChain, newChain) = commonBlockThenSuffixes(prevBest.header, newBestAfterThis)
+      val prevBestBlock = bestFullBlockOpt.get
+      val (prevChain, newChain) = commonBlockThenSuffixes(prevBestBlock.header, newBestBlock)
       val toRemove: Seq[ErgoFullBlock] = prevChain.tail.headers.flatMap(getFullBlock)
       val toApply: Seq[ErgoFullBlock] = newChain.tail.headers
         .flatMap(h => if (h == fullBlock.header) Some(fullBlock) else getFullBlock(h))
@@ -78,15 +78,15 @@ trait FullBlockProcessor extends HeadersProcessor {
         nonBestBlock(toProcess)
       } else {
         //application of this block leads to full chain with higher score
-        logStatus(toRemove, toApply, fullBlock, Some(prevBest))
+        logStatus(toRemove, toApply, fullBlock, Some(prevBestBlock))
         val branchPoint = toRemove.headOption.map(_ => prevChain.head.id)
 
-        updateStorage(newModRow, newBestAfterThis.id)
+        updateStorage(newModRow, newBestBlock.id)
 
         if (blocksToKeep >= 0) {
           val lastKept = pruningProcessor.updateBestFullBlock(fullBlock.header)
-          val bestHeight: Int = newBestAfterThis.height
-          val diff = bestHeight - prevBest.header.height
+          val bestHeight: Int = newBestBlock.height
+          val diff = bestHeight - prevBestBlock.header.height
           pruneBlockDataAt(((lastKept - diff) until lastKept).filter(_ >= 0))
         }
         ProgressInfo(branchPoint, toRemove, toApply, Seq.empty)
@@ -94,7 +94,6 @@ trait FullBlockProcessor extends HeadersProcessor {
   }
 
   /**
-    *
     * @param id - id of a header to compare
     * @return `true`, if block with id `id` is better, than current best block, `false` otherwise.
     */
@@ -134,12 +133,6 @@ trait FullBlockProcessor extends HeadersProcessor {
       s"going to apply ${toApply.length}$toRemoveStr modifiers.$newStatusStr")
   }
 
-  //todo: not used so far
-  private def pruneOnNewBestBlock(header: Header, blocksToKeep: Int): Unit = {
-    heightOf(header.id).filter(h => h > blocksToKeep)
-      .foreach(h => pruneBlockDataAt(Seq(h - blocksToKeep)))
-  }
-
   private def pruneBlockDataAt(heights: Seq[Int]): Try[Unit] = Try {
     val toRemove: Seq[ModifierId] = heights.flatMap(h => headerIdsAtHeight(h))
       .flatMap(id => typedModifierById[Header](id))
@@ -163,11 +156,9 @@ object FullBlockProcessor {
 
   type BlockProcessing = PartialFunction[ToProcess, ProgressInfo[ErgoPersistentModifier]]
 
-  case class ToProcess(
-                        fullBlock: ErgoFullBlock,
-                        newModRow: ErgoPersistentModifier,
-                        newBestAfterThis: Header,
-                        blocksToKeep: Int,
-                        bestFullChain: Seq[ErgoFullBlock]
-                      )
+  case class ToProcess(fullBlock: ErgoFullBlock,
+                       newModRow: ErgoPersistentModifier,
+                       newBestAfterThis: Header,
+                       blocksToKeep: Int,
+                       bestFullChain: Seq[ErgoFullBlock])
 }

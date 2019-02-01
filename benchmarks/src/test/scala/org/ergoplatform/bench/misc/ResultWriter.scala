@@ -1,10 +1,9 @@
-package org.ergoplatform.bench
+package org.ergoplatform.bench.misc
 
 import java.io.FileWriter
 
 import scala.io.Source
 import scala.util.Try
-
 
 trait WritableData {
   def toDataLine: String
@@ -31,6 +30,6 @@ object ResultWriter {
 
 }
 
-case class Result(t: Long, v: Long) extends  WritableData {
+case class Result(t: Long, v: Long) extends WritableData {
   override def toDataLine: String = s"$t,$v"
 }

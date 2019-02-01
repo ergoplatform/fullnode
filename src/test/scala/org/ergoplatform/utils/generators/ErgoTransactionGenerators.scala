@@ -5,13 +5,13 @@ import org.ergoplatform.ErgoBox.{NonMandatoryRegisterId, TokenId}
 import org.ergoplatform.modifiers.ErgoFullBlock
 import org.ergoplatform.modifiers.history.BlockTransactions
 import org.ergoplatform.modifiers.mempool.{ErgoTransaction, UnsignedErgoTransaction}
-import org.ergoplatform.modifiers.state.{Insertion, StateChanges, UTXOSnapshotChunk}
+import org.ergoplatform.modifiers.state.{Insertion, StateChanges}
 import org.ergoplatform.nodeView.history.ErgoHistory
 import org.ergoplatform.nodeView.state.{BoxHolder, ErgoStateContext, VotingData}
 import org.ergoplatform.settings.{Constants, LaunchParameters}
 import org.ergoplatform.{ErgoBox, ErgoBoxCandidate, Input}
 import org.scalacheck.Arbitrary.arbByte
-import org.scalacheck.{Arbitrary, Gen}
+import org.scalacheck.Gen
 import scorex.crypto.hash.{Blake2b256, Digest32}
 import scorex.util._
 import sigmastate.Values.{ByteArrayConstant, CollectionConstant, EvaluatedValue, FalseLeaf, TrueLeaf, Value}
@@ -20,7 +20,6 @@ import org.ergoplatform.settings.Parameters._
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.util.Random
-
 
 trait ErgoTransactionGenerators extends ErgoGenerators {
 
@@ -245,11 +244,6 @@ trait ErgoTransactionGenerators extends ErgoGenerators {
     headerId <- modifierIdGen
     txs <- Gen.nonEmptyListOf(invalidErgoTransactionGen)
   } yield BlockTransactions(headerId, txs)
-
-  lazy val randomUTXOSnapshotChunkGen: Gen[UTXOSnapshotChunk] = for {
-    index: Short <- Arbitrary.arbitrary[Short]
-    stateElements: Seq[ErgoBox] <- Gen.listOf(ergoBoxGenNoProp)
-  } yield UTXOSnapshotChunk(stateElements, index)
 
   lazy val invalidErgoFullBlockGen: Gen[ErgoFullBlock] = for {
     header <- defaultHeaderGen

@@ -5,13 +5,13 @@ import java.net.URL
 
 import akka.actor.{ActorRef, ActorSystem}
 import javax.net.ssl.HttpsURLConnection
-import org.ergoplatform.bench.misc.ModifierWriter
+import org.ergoplatform.bench.misc.{ModifierWriter, TempDir}
 import org.ergoplatform.mining.emission.EmissionRules
 import org.ergoplatform.modifiers.ErgoPersistentModifier
 import org.ergoplatform.modifiers.history.Header
 import org.ergoplatform.nodeView.ErgoNodeViewRef
 import org.ergoplatform.nodeView.history.ErgoHistory
-import org.ergoplatform.nodeView.history.storage.modifierprocessors.{FullBlockPruningProcessor, ToDownloadProcessor}
+import org.ergoplatform.nodeView.history.modifierprocessors.{FullBlockPruningProcessor, ToDownloadProcessor}
 import org.ergoplatform.nodeView.mempool.ErgoMemPool
 import org.ergoplatform.nodeView.state.{ErgoState, StateType}
 import org.ergoplatform.nodeView.wallet.ErgoWallet

@@ -51,6 +51,18 @@ trait IntegrationTestConstants extends ErgoTestConstants {
     """.stripMargin
   )
 
+  def snapshotCreationIntervalConfig(interval: Int): Config = ConfigFactory.parseString(
+    s"""
+       |ergo.node.snapshotCreationInterval=$interval
+    """.stripMargin
+  )
+
+  def keepLastSnapshotsConfig(n: Int): Config = ConfigFactory.parseString(
+    s"""
+       |ergo.node.keepLastSnapshots=$n
+    """.stripMargin
+  )
+
   def blockIntervalConfig(millis: Int): Config = ConfigFactory.parseString(
     s"""
        |ergo.chain.blockInterval=${millis}ms

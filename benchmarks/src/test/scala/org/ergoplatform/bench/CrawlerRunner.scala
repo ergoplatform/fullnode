@@ -4,7 +4,7 @@ import java.io.File
 
 import akka.actor.ActorRef
 import org.ergoplatform.api.{BlocksApiRoute, InfoRoute, TransactionsApiRoute}
-import org.ergoplatform.bench.misc.CrawlerConfig
+import org.ergoplatform.bench.misc.{CrawlerConfig, TempDir}
 import org.ergoplatform.local.{ErgoMinerRef, ErgoStatsCollectorRef}
 import org.ergoplatform.mining.emission.EmissionRules
 import org.ergoplatform.modifiers.ErgoPersistentModifier

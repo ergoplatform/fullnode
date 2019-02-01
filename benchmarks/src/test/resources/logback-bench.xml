@@ -6,7 +6,7 @@
     <logger name="org.ergoplatform.network.ErgoNodeViewSynchronizer" level="ERROR"/>
     <logger name="scorex.core.network.NetworkController " level="ERROR"/>
     <logger name="org.ergoplatform.nodeView.history" level="ERROR"/>
-    <logger name="org.ergoplatform.nodeView.history.storage.modifierprocessors" level="ERROR"/>
+    <logger name="org.ergoplatform.nodeView.history.modifierprocessors" level="ERROR"/>
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <target>System.out</target>

@@ -38,7 +38,7 @@ class PrunedDigestNodeSyncSpec extends FreeSpec with IntegrationSuite {
   // 1. Start up mining node and let it mine chain of length ~ {approxTargetHeight};
   // 2. Shut it down, restart with turned off mining and fetch its info to get actual {targetHeight};
   // 3. Start digest node and wait until it gets synced with the first one up to {targetHeight} ensuring
-  //    it does not load full block that should be pruned;
+  //    it does not load full blocks that should be pruned;
   // 4. Fetch digest node info and compare it with first node's one;
   // 5. Make sure digest node does not store full blocks with height < {targetHeight - blocksToKeep};
   "Pruned digest node synchronization" in {

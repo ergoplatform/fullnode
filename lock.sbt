@@ -68,7 +68,7 @@ dependencyOverrides in ThisBuild ++= Seq(
   "org.scorexfoundation" % "iodb_2.12" % "0.3.2",
   "org.scorexfoundation" % "scorex-core_2.12" % "53207304-SNAPSHOT",
   "org.scorexfoundation" % "scorex-util_2.12" % "0.1.1",
-  "org.scorexfoundation" % "scrypto_2.12" % "2.1.4",
+  "org.scorexfoundation" % "scrypto_2.12" % "2.1.5",
   "org.scorexfoundation" % "sigma-state_2.12" % "master-5f01afb6-SNAPSHOT",
   "org.slf4j" % "slf4j-api" % "1.7.25",
   "org.spire-math" % "jawn-parser_2.12" % "0.11.0",

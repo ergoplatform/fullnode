@@ -2,6 +2,7 @@ package org.ergoplatform.utils.generators
 
 import akka.actor.ActorRef
 import io.iohk.iodb.ByteArrayWrapper
+import org.ergoplatform.ErgoBox
 import org.ergoplatform.local.ErgoMiner
 import org.ergoplatform.modifiers.ErgoFullBlock
 import org.ergoplatform.modifiers.history.{ExtensionCandidate, Header}
@@ -9,8 +10,7 @@ import org.ergoplatform.modifiers.mempool.ErgoTransaction
 import org.ergoplatform.nodeView.state._
 import org.ergoplatform.nodeView.state.wrapped.WrappedUtxoState
 import org.ergoplatform.settings.{Algos, Constants, ErgoSettings, LaunchParameters}
-import org.ergoplatform.utils.LoggingUtil
-import org.ergoplatform.ErgoBox
+import org.ergoplatform.utils.{BoxUtils, LoggingUtil}
 import org.scalatest.Matchers
 import scorex.core.VersionTag
 import scorex.crypto.authds.{ADDigest, ADKey}
@@ -19,10 +19,14 @@ import scorex.testkit.utils.FileUtils
 import sigmastate.Values
 
 import scala.annotation.tailrec
-import scala.util.{Failure, Random, Try}
+import scala.util.{Failure, Random, Success, Try}
 
 trait ValidBlocksGenerators
-  extends TestkitHelpers with FileUtils with Matchers with ChainGenerator with ErgoTransactionGenerators {
+  extends TestkitHelpers
+    with FileUtils
+    with Matchers
+    with ChainGenerator
+    with ErgoTransactionGenerators {
 
   def createUtxoState(nodeViewHolderRef: Option[ActorRef] = None): (UtxoState, BoxHolder) = {
     val constants = StateConstants(nodeViewHolderRef, settings)
@@ -30,19 +34,24 @@ trait ValidBlocksGenerators
   }
 
   def createUtxoState(constants: StateConstants): (UtxoState, BoxHolder) = {
-    ErgoState.generateGenesisUtxoState(createTempDir, constants)
+    ErgoState.generateGenesisUtxoState(createTempDir, constants, settings)
   }
 
   def createUtxoState(bh: BoxHolder): UtxoState =
-    UtxoState.fromBoxHolder(bh, None, createTempDir, stateConstants)
+    UtxoState.fromBoxHolder(bh, None, createTempDir, stateConstants, settings)
+
+  def createUtxoStateWithCustomSettings(bh: BoxHolder, customSettings: ErgoSettings): UtxoState =
+    UtxoState.fromBoxHolder(bh, None, createTempDir, stateConstants, customSettings)
 
   def createDigestState(version: VersionTag, digest: ADDigest): DigestState =
-    DigestState.create(Some(version), Some(digest), createTempDir, ErgoSettings.read(None))
+    DigestState.create(Some(version), Some(digest), createTempDir, stateConstants)
 
   def validTransactionsFromBoxHolder(boxHolder: BoxHolder): (Seq[ErgoTransaction], BoxHolder) =
     validTransactionsFromBoxHolder(boxHolder, new Random)
 
-  /** @param sizeLimit maximum transactions size in bytes */
+  /**
+    * @param sizeLimit maximum transactions size in bytes
+    */
   protected def validTransactionsFromBoxes(sizeLimit: Int,
                                            stateBoxesIn: Seq[ErgoBox],
                                            rnd: Random): (Seq[ErgoTransaction], Seq[ErgoBox]) = {

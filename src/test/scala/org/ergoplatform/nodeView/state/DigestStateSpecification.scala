@@ -1,7 +1,6 @@
 package org.ergoplatform.nodeView.state
 
 import org.ergoplatform.modifiers.history.Header
-import org.ergoplatform.settings.ErgoSettings
 import org.ergoplatform.utils.ErgoPropertyTest
 import scorex.core._
 import scorex.crypto.authds.ADDigest
@@ -20,11 +19,11 @@ class DigestStateSpecification extends ErgoPropertyTest {
 
       val fb = validFullBlock(parentOpt = None, us, bh)
       val dir2 = createTempDir
-      val ds = DigestState.create(Some(us.version), Some(us.rootHash), dir2, ErgoSettings.read(None))
+      val ds = DigestState.create(Some(us.version), Some(us.rootHash), dir2, stateConstants)
       ds.applyModifier(fb).isSuccess shouldBe true
       ds.close()
 
-      val state = DigestState.create(None, None, dir2, ErgoSettings.read(None))
+      val state = DigestState.create(None, None, dir2, stateConstants)
       state.version shouldEqual fb.header.id
       state.rootHash shouldEqual fb.header.stateRoot
     }

@@ -4,7 +4,6 @@ import java.io.File
 
 import akka.actor.ActorSystem
 import akka.testkit.TestKit
-import org.ergoplatform._
 import org.ergoplatform.local.ErgoMiner
 import org.ergoplatform.mining.difficulty.RequiredDifficulty
 import org.ergoplatform.mining.{AutolykosPowScheme, CandidateBlock}
@@ -13,11 +12,12 @@ import org.ergoplatform.modifiers.history.{Extension, ExtensionCandidate, Header
 import org.ergoplatform.modifiers.mempool.{ErgoTransaction, UnsignedErgoTransaction}
 import org.ergoplatform.nodeView.history.ErgoHistory
 import org.ergoplatform.nodeView.history.ErgoHistory.Height
-import org.ergoplatform.nodeView.history.storage.modifierprocessors.{FullBlockPruningProcessor, ToDownloadProcessor}
+import org.ergoplatform.nodeView.history.modifierprocessors.{FullBlockPruningProcessor, ToDownloadProcessor}
 import org.ergoplatform.nodeView.state._
 import org.ergoplatform.nodeView.wallet._
 import org.ergoplatform.settings._
 import org.ergoplatform.utils.ErgoTestHelpers
+import org.ergoplatform.{ErgoAddressEncoder, ErgoBox, P2PKAddress, _}
 import scorex.util.ModifierId
 import sigmastate.basics.DLogProtocol.ProveDlog
 
@@ -57,8 +57,21 @@ object ChainGenerator extends TestKit(ActorSystem()) with App with ErgoTestHelpe
 
   val miningDelay = 1.second
   val minimalSuffix = 2
-  val nodeSettings: NodeConfigurationSettings = NodeConfigurationSettings(StateType.Utxo, verifyTransactions = true,
-    -1, PoPoWBootstrap = false, minimalSuffix, mining = false, miningDelay, offlineGeneration = false, 200, 100000, 100000)
+  val nodeSettings: NodeConfigurationSettings = NodeConfigurationSettings(
+    StateType.Utxo,
+    verifyTransactions = true,
+    blocksToKeep = -1,
+    PoPoWBootstrap = false,
+    minimalSuffix = minimalSuffix,
+    mining = false,
+    miningDelay = miningDelay,
+    offlineGeneration = false,
+    keepVersions = 200,
+    mempoolCapacity = 100000,
+    blacklistCapacity = 100000,
+    snapshotCreationInterval = 10000,
+    keepLastSnapshots = 2
+  )
   val monetarySettings = settings.chainSettings.monetary.copy(
     minerRewardDelay = RewardDelay,
     afterGenesisStateDigestHex = "d801a0e4573d6993caa2eda7dc97aad2b4c8ed51ebb0afe0dd272c8d7e26d5fd01"
@@ -76,7 +89,7 @@ object ChainGenerator extends TestKit(ActorSystem()) with App with ErgoTestHelpe
 
   val history = ErgoHistory.readOrGenerate(fullHistorySettings, timeProvider)
   allowToApplyOldBlocks(history)
-  val (state, _) = ErgoState.generateGenesisUtxoState(stateDir, StateConstants(None, fullHistorySettings))
+  val (state, _) = ErgoState.generateGenesisUtxoState(stateDir, StateConstants(None, fullHistorySettings), settings)
   log.info(s"Going to generate a chain at ${dir.getAbsoluteFile} starting from ${history.bestFullBlockOpt}")
 
   val chain = loop(state, None, None, Seq())

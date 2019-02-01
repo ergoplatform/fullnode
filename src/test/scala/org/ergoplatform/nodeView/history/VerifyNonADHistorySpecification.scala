@@ -8,8 +8,8 @@ import org.ergoplatform.utils.HistoryTestHelpers
 
 class VerifyNonADHistorySpecification extends HistoryTestHelpers {
 
-  private def genHistory() =
-    generateHistory(verifyTransactions = true, StateType.Utxo, PoPoWBootstrap = false, BlocksToKeep)
+  private def genHistory(blocksToKeep: Int = BlocksToKeep) =
+    generateHistory(verifyTransactions = true, StateType.Utxo, PoPoWBootstrap = false, blocksToKeep)
 
   property("block sections application in incorrect order") {
     var history = genHistory()
@@ -57,7 +57,7 @@ class VerifyNonADHistorySpecification extends HistoryTestHelpers {
   }
 
   property("nextModifiersToDownload") {
-    var history = genHistory()
+    var history = genHistory(blocksToKeep = -1)
     val chain = genChain(BlocksToKeep)
     history = applyBlock(history, chain.head)
     history.bestFullBlockOpt.value shouldBe chain.head

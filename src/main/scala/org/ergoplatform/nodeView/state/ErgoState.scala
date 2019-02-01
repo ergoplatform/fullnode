@@ -55,6 +55,8 @@ trait ErgoState[IState <: MinimalState[ErgoPersistentModifier, IState]]
 
 object ErgoState extends ScorexLogging {
 
+  type ModifierProcessing[T <: ErgoState[T]] = PartialFunction[ErgoPersistentModifier, Try[T]]
+
   def stateDir(settings: ErgoSettings): File = new File(s"${settings.directory}/state")
 
   /**
@@ -144,13 +146,14 @@ object ErgoState extends ScorexLogging {
   }
 
   def generateGenesisUtxoState(stateDir: File,
-                               constants: StateConstants): (UtxoState, BoxHolder) = {
+                               constants: StateConstants,
+                               settings: ErgoSettings): (UtxoState, BoxHolder) = {
 
     log.info("Generating genesis UTXO state")
     val emissionBox = Some(genesisEmissionBox(constants.emission))
     val bh = BoxHolder(emissionBox.toSeq)
 
-    UtxoState.fromBoxHolder(bh, emissionBox, stateDir, constants).ensuring(us => {
+    UtxoState.fromBoxHolder(bh, emissionBox, stateDir, constants, settings).ensuring(us => {
       log.info(s"Genesis UTXO state generated with hex digest ${Base16.encode(us.rootHash)}")
       java.util.Arrays.equals(us.rootHash, constants.emission.settings.afterGenesisStateDigest) && us.version == genesisStateVersion
     }) -> bh
@@ -158,7 +161,7 @@ object ErgoState extends ScorexLogging {
 
   def generateGenesisDigestState(stateDir: File, settings: ErgoSettings): DigestState = {
     DigestState.create(Some(genesisStateVersion), Some(settings.chainSettings.monetary.afterGenesisStateDigest),
-      stateDir, settings)
+      stateDir, StateConstants(None, settings))
   }
 
   val preGenesisStateDigest: ADDigest = ADDigest @@ Array.fill(32)(0: Byte)
@@ -171,9 +174,9 @@ object ErgoState extends ScorexLogging {
     dir.mkdirs()
 
     settings.nodeSettings.stateType match {
-      case StateType.Digest => DigestState.create(None, None, dir, settings)
-      case StateType.Utxo if dir.listFiles().nonEmpty => UtxoState.create(dir, constants)
-      case _ => ErgoState.generateGenesisUtxoState(dir, constants)._1
+      case StateType.Digest => DigestState.create(None, None, dir, constants)
+      case StateType.Utxo if dir.listFiles().nonEmpty => UtxoState.create(dir, constants, settings)
+      case _ => ErgoState.generateGenesisUtxoState(dir, constants, settings)._1
     }
   }
 
@@ -203,17 +206,6 @@ object ErgoState extends ScorexLogging {
     * Required script of the box, that collects mining rewards
     */
   def rewardOutputScript(delta: Int, minerPk: ProveDlog): Value[SBoolean.type] = {
-    /*
-    val compiler = new SigmaCompiler
-
-    val compiled = compiler.compile(Map("delta" -> delta, "minerPk" -> minerPk),
-      """{
-        |    val minimalHeight = SELF.R4[Long].get + delta
-        |    val correctHeight = HEIGHT >= minimalHeight
-        |    correctHeight && minerPk
-        |}""".stripMargin).asBoolValue
-        */
-
     AND(
       GE(Height, Plus(boxCreationHeight(Self), IntConstant(delta))),
       minerPk

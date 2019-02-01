@@ -1,12 +1,11 @@
-package org.ergoplatform.nodeView.history.storage.modifierprocessors.popow
+package org.ergoplatform.nodeView.history.modifierprocessors.popow
 
 import com.google.common.primitives.Ints
 import io.iohk.iodb.ByteArrayWrapper
 import org.ergoplatform.modifiers.ErgoPersistentModifier
 import org.ergoplatform.modifiers.history.{PoPoWProof, PoPoWProofUtils}
-import org.ergoplatform.nodeView.history.ErgoHistory
 import org.ergoplatform.nodeView.history.ErgoHistory.GenesisHeight
-import org.ergoplatform.nodeView.history.storage.modifierprocessors.HeadersProcessor
+import org.ergoplatform.nodeView.history.modifierprocessors.HeadersProcessor
 import org.ergoplatform.settings.Algos
 import scorex.core.consensus.History.ProgressInfo
 
@@ -52,5 +51,5 @@ trait FullPoPoWProofsProcessor extends PoPoWProofsProcessor with HeadersProcesso
 
     ProgressInfo(None, toRemove = Seq.empty, toApply = Seq(m.suffix.last), toDownload = Seq.empty)
   }
-}
 
+}

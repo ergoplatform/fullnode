@@ -65,9 +65,11 @@ case class ADProofs(headerId: ModifierId,
       }
     }
   }
+
 }
 
 object ADProofs extends ApiCodecs {
+
   val modifierTypeId: ModifierTypeId = ModifierTypeId @@ (104: Byte)
 
   val KL = 32
@@ -104,9 +106,11 @@ object ADProofs extends ApiCodecs {
       size <- c.downField("size").as[Option[Int]]
     } yield ADProofs(headerId, SerializedAdProof @@ proofBytes, size)
   }
+
 }
 
 object ADProofSerializer extends Serializer[ADProofs] {
+
   override def toBytes(obj: ADProofs): Array[Byte] = Bytes.concat(idToBytes(obj.headerId), obj.proofBytes)
 
   override def parseBytes(bytes: Array[Byte]): Try[ADProofs] = Try {
@@ -116,4 +120,5 @@ object ADProofSerializer extends Serializer[ADProofs] {
       Some(bytes.length)
     )
   }
+
 }

@@ -1,4 +1,4 @@
-package org.ergoplatform.bench
+package org.ergoplatform.bench.misc
 
 object TempDir {
 

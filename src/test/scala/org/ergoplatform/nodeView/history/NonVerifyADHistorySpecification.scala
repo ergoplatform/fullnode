@@ -1,7 +1,6 @@
 package org.ergoplatform.nodeView.history
 
 import org.ergoplatform.modifiers.history.{Header, HeaderChain}
-import org.ergoplatform.modifiers.state.UTXOSnapshotChunk
 import org.ergoplatform.nodeView.state.StateType
 import org.ergoplatform.settings.{Algos, Constants}
 import org.ergoplatform.utils.HistoryTestHelpers
@@ -15,15 +14,6 @@ class NonVerifyADHistorySpecification extends HistoryTestHelpers {
       .ensuring(_.bestFullBlockOpt.isEmpty)
 
   private lazy val popowHistory = ensureMinimalHeight(genHistory(), 100)
-
-  ignore("Should apply UTXOSnapshotChunks") {
-    forAll(randomUTXOSnapshotChunkGen) { snapshot: UTXOSnapshotChunk =>
-      popowHistory.applicable(snapshot) shouldBe true
-      val processInfo = popowHistory.append(snapshot).get._2
-      processInfo.toApply shouldEqual Some(snapshot)
-      popowHistory.applicable(snapshot) shouldBe false
-    }
-  }
 
   property("Header votes") {
     import org.ergoplatform.settings.Parameters._

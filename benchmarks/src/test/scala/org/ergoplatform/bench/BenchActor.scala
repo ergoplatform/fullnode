@@ -1,6 +1,7 @@
 package org.ergoplatform.bench
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import org.ergoplatform.bench.misc.{Result, ResultWriter}
 import org.ergoplatform.modifiers.ErgoFullBlock
 import org.ergoplatform.nodeView.state.StateType
 import scorex.core.network.NodeViewSynchronizer.ReceivableMessages.SemanticallySuccessfulModifier

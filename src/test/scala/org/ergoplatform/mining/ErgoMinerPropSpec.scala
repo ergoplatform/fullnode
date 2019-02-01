@@ -125,16 +125,17 @@ class ErgoMinerPropSpec extends ErgoPropertyTest {
     val delta = 1
     val feeProposition = ErgoState.feeProposition(delta)
 
-    val bh = boxesHolderGen.sample.get
-    var us = createUtxoState(bh)
-    val height = ErgoHistory.EmptyHistoryHeight
-
-    val emissionRules = new EmissionRules(
-      MonetarySettings(
-        minerRewardDelay = delta,
-        afterGenesisStateDigestHex = "584748265afc5bd6d7fb80f750131b923a431ae6e4bedc2b590d49dd81ef64b601"
+    val localSettings = settings.copy(
+      chainSettings = settings.chainSettings.copy(
+        monetary = settings.chainSettings.monetary.copy(minerRewardDelay = delta)
       )
     )
+
+    val emissionRules = new EmissionRules(localSettings.chainSettings.monetary)
+
+    val bh = boxesHolderGen.sample.get
+    var us = createUtxoStateWithCustomSettings(bh, localSettings)
+    val height = ErgoHistory.EmptyHistoryHeight
 
     val blockTx = validTransactionFromBoxes(bh.boxes.take(5).values.toIndexedSeq, outputsProposition = feeProposition)
     val txs = ErgoMiner.collectFees(height, Seq(blockTx), defaultMinerPk, emissionRules).toSeq

@@ -8,6 +8,7 @@ import org.ergoplatform.modifiers.history.{ADProofs, Header}
 import org.ergoplatform.modifiers.mempool.ErgoBoxSerializer
 import org.ergoplatform.modifiers.{ErgoFullBlock, ErgoPersistentModifier}
 import org.ergoplatform.nodeView.ErgoInterpreter
+import org.ergoplatform.nodeView.state.ErgoState.ModifierProcessing
 import org.ergoplatform.settings._
 import org.ergoplatform.utils.LoggingUtil
 import scorex.core._
@@ -44,9 +45,9 @@ class DigestState protected(override val version: VersionTag,
     case fb: ErgoFullBlock =>
       fb.adProofs match {
         case None =>
-          Failure(new Error("Empty proofs when trying to apply full block to Digest state"))
+          Failure(new Exception("Empty proofs when trying to apply full block to Digest state"))
         case Some(proofs) if !java.util.Arrays.equals(ADProofs.proofDigest(proofs.proofBytes), fb.header.ADProofsRoot) =>
-          Failure(new Error("Incorrect proofs digest"))
+          Failure(new Exception("Incorrect proofs digest"))
         case Some(proofs) =>
           stateContext.appendFullBlock(fb, votingSettings).map { currentStateContext =>
             val txs = fb.blockTransactions.txs
@@ -61,13 +62,13 @@ class DigestState protected(override val version: VersionTag,
               val boxesToSpend = tx.inputs.map(_.boxId).map { id =>
                 knownBoxes.get(ByteArrayWrapper(id)) match {
                   case Some(box) => box
-                  case None => throw new Error(s"Box with id ${Algos.encode(id)} not found")
+                  case None => throw new Exception(s"Box with id ${Algos.encode(id)} not found")
                 }
               }
               tx.statefulValidity(boxesToSpend, currentStateContext)(verifier).get
             }.sum
             if (totalCost > currentStateContext.currentParameters.maxBlockCost) {
-              throw new Error(s"Transaction cost $totalCost exceeds limit")
+              throw new Exception(s"Transaction cost $totalCost exceeds limit")
             }
           }
       }
@@ -75,34 +76,11 @@ class DigestState protected(override val version: VersionTag,
     case _: Header => Success(Unit)
 
     case a: Any =>
-      Failure(new Error(s"Modifier not validated: $a"))
+      Failure(new Exception(s"Modifier not validated: $a"))
   }
 
-  //todo: utxo snapshot could go here
-  override def applyModifier(mod: ErgoPersistentModifier): Try[DigestState] = mod match {
-    case fb: ErgoFullBlock if nodeSettings.verifyTransactions =>
-      log.info(s"Got new full block ${fb.encodedId} at height ${fb.header.height} with root " +
-        s"${Algos.encode(fb.header.stateRoot)}. Our root is ${Algos.encode(rootHash)}")
-      this.validate(fb).flatMap { _ =>
-        update(fb)
-      }.recoverWith {
-        case e =>
-          log.warn(s"Invalid block ${fb.encodedId}, reason: ${LoggingUtil.getReasonMsg(e)}")
-          Failure(e)
-      }
-
-    case _: ErgoFullBlock if !nodeSettings.verifyTransactions =>
-      log.warn("Should not get full blocks from node view holder if !settings.verifyTransactions")
-      Try(this)
-
-    case h: Header =>
-      log.info(s"Got new Header ${h.encodedId} with root ${Algos.encoder.encode(h.stateRoot)}")
-      update(h)
-
-    case a: Any =>
-      log.warn(s"Unhandled modifier: $a")
-      Try(this)
-  }
+  //todo: utxo snapshot application
+  override def applyModifier(mod: ErgoPersistentModifier): Try[DigestState] = processing(mod)
 
   @SuppressWarnings(Array("OptionGet"))
   override def rollbackTo(version: VersionTag): Try[DigestState] = {
@@ -120,31 +98,43 @@ class DigestState protected(override val version: VersionTag,
 
   def close(): Unit = store.close()
 
-  private def update(fullBlock: ErgoFullBlock): Try[DigestState] = {
-    val version: VersionTag = idToVersion(fullBlock.header.id)
-    stateContext.appendFullBlock(fullBlock, votingSettings).flatMap { newStateContext =>
-      val contextKeyVal = ByteArrayWrapper(ErgoStateReader.ContextKey) -> ByteArrayWrapper(newStateContext.bytes)
-      update(version, fullBlock.header.stateRoot, Seq(contextKeyVal))
-    }
+  private def processing: ModifierProcessing[DigestState] = processFullBlock orElse processHeader orElse processOther
+
+  private def processFullBlock: ModifierProcessing[DigestState] = {
+    case fb: ErgoFullBlock if nodeSettings.verifyTransactions =>
+      log.info(s"Got new full block ${fb.encodedId} at height ${fb.header.height} with root " +
+        s"${Algos.encode(fb.header.stateRoot)}. Our root is ${Algos.encode(rootHash)}")
+      validate(fb)
+        .flatMap { _ =>
+          val version: VersionTag = idToVersion(fb.header.id)
+          stateContext.appendFullBlock(fb, votingSettings).flatMap(update(version, fb.header.stateRoot, _))
+        }
+        .recoverWith { case e =>
+          log.warn(s"Invalid block ${fb.encodedId}, reason: ${LoggingUtil.getReasonMsg(e)}")
+          Failure(e)
+        }
   }
 
-  //todo: refactor to eliminate common boilerplate with the method above
-  private def update(header: Header): Try[DigestState] = {
-    val version: VersionTag = idToVersion(header.id)
-    stateContext.appendBlock(header, None, votingSettings).flatMap { newStateContext =>
-      val contextKeyVal = ByteArrayWrapper(ErgoStateReader.ContextKey) -> ByteArrayWrapper(newStateContext.bytes)
-      update(version, header.stateRoot, Seq(contextKeyVal))
-    }
+  private def processHeader: ModifierProcessing[DigestState] = {
+    case h: Header =>
+      log.info(s"Got new Header ${h.encodedId} with root ${Algos.encoder.encode(h.stateRoot)}")
+      val version: VersionTag = idToVersion(h.id)
+      stateContext.appendBlock(h, None, votingSettings).flatMap(update(version, h.stateRoot, _))
+  }
+
+  private def processOther: ModifierProcessing[DigestState] = {
+    case other =>
+      log.warn(s"Unhandled modifier: $other")
+      Success(this)
   }
 
   private def update(newVersion: VersionTag,
                      newRootHash: ADDigest,
-                     additionalData: Seq[(ByteArrayWrapper, ByteArrayWrapper)]): Try[DigestState] = Try {
+                     newStateContext: ErgoStateContext): Try[DigestState] = Try {
     val wrappedVersion = Algos.versionToBAW(newVersion)
+    val toUpdate = DigestState.metadata(newVersion, newRootHash, newStateContext)
 
-    store.update(wrappedVersion,
-      toRemove = Seq.empty,
-      toUpdate = Seq(wrappedVersion -> ByteArrayWrapper(newRootHash)) ++ additionalData)
+    store.update(wrappedVersion, Seq.empty, toUpdate)
     new DigestState(newVersion, newRootHash, store, ergoSettings, verifier)
   }
 
@@ -152,33 +142,60 @@ class DigestState protected(override val version: VersionTag,
 
 object DigestState extends ScorexLogging with ScorexEncoding {
 
+  /**
+    * Creates [[DigestState]] from existing [[ErgoStateContext]] corresponding to some `version` and `rootHash`.
+    */
+  def recover(version: VersionTag,
+              rootHash: ADDigest,
+              stateContext: ErgoStateContext,
+              dir: File,
+              constants: StateConstants): DigestState = {
+    val store = new LSMStore(dir, keepVersions = constants.keepVersions)
+    val verifier = ErgoInterpreter(LaunchParameters)
+    val wrappedVersion = Algos.versionToBAW(version)
+    val toUpdate = DigestState.metadata(version, rootHash, stateContext)
+
+    store.update(wrappedVersion, Seq.empty, toUpdate)
+    new DigestState(version, rootHash, store, constants.settings, verifier)
+  }
+
   def create(versionOpt: Option[VersionTag],
              rootHashOpt: Option[ADDigest],
              dir: File,
-             settings: ErgoSettings): DigestState = Try {
-    val store = new LSMStore(dir, keepVersions = settings.nodeSettings.keepVersions)
+             constants: StateConstants): DigestState = Try {
+    val store = new LSMStore(dir, keepVersions = constants.keepVersions)
+    val context = ErgoStateReader.storageStateContext(store, constants)
     val verifier = ErgoInterpreter(LaunchParameters)
     (versionOpt, rootHashOpt) match {
       case (Some(version), Some(rootHash)) =>
         val state = if (store.lastVersionID.map(w => bytesToVersion(w.data)).contains(version)) {
-          new DigestState(version, rootHash, store, settings, verifier)
+          new DigestState(version, rootHash, store, constants.settings, verifier)
         } else {
           val inVersion = store.lastVersionID.map(w => bytesToVersion(w.data)).getOrElse(version)
-          new DigestState(inVersion, rootHash, store, settings, verifier)
-            .update(version, rootHash, Seq()).get //sync store
+          new DigestState(inVersion, rootHash, store, constants.settings, verifier)
+            .update(version, rootHash, context).get //sync store
         }
         state.ensuring(bytesToVersion(store.lastVersionID.get.data) == version)
       case (None, None) if store.lastVersionID.isEmpty =>
-        ErgoState.generateGenesisDigestState(dir, settings)
+        ErgoState.generateGenesisDigestState(dir, constants.settings)
       case (None, None) =>
         val version = bytesToVersion(store.lastVersionID.get.data)
         val rootHash = store.get(Algos.versionToBAW(version)).get.data
-        new DigestState(version, ADDigest @@ rootHash, store, settings, verifier)
+        new DigestState(version, ADDigest @@ rootHash, store, constants.settings, verifier)
       case _ => ???
     }
-  }.recoverWith { case e =>
-    log.warn(s"Failed to create state with ${versionOpt.map(encoder.encode)} and ${rootHashOpt.map(encoder.encode)}", e)
-    Failure(e)
-  }.getOrElse(ErgoState.generateGenesisDigestState(dir, settings))
+  } match {
+    case Success(state) => state
+    case Failure(e) =>
+      log.warn(s"Failed to create state with ${versionOpt.map(encoder.encode)} and ${rootHashOpt.map(encoder.encode)}", e)
+      ErgoState.generateGenesisDigestState(dir, constants.settings)
+  }
+
+  protected def metadata(newVersion: VersionTag,
+                         newRootHash: ADDigest,
+                         newStateContext: ErgoStateContext): Seq[(ByteArrayWrapper, ByteArrayWrapper)] = Seq(
+    Algos.versionToBAW(newVersion) -> ByteArrayWrapper(newRootHash),
+    ByteArrayWrapper(ErgoStateReader.ContextKey) -> ByteArrayWrapper(newStateContext.bytes)
+  )
 
 }

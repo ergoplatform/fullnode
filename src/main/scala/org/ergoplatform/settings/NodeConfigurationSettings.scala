@@ -21,8 +21,9 @@ case class NodeConfigurationSettings(stateType: StateType,
                                      offlineGeneration: Boolean,
                                      keepVersions: Int,
                                      mempoolCapacity: Int,
-                                     blacklistCapacity: Int)
-
+                                     blacklistCapacity: Int,
+                                     snapshotCreationInterval: Int,
+                                     keepLastSnapshots: Int)
 
 trait NodeConfigurationReaders extends StateTypeReaders with ModifierIdReader {
 
@@ -40,7 +41,9 @@ trait NodeConfigurationReaders extends StateTypeReaders with ModifierIdReader {
       cfg.as[Boolean](s"$path.offlineGeneration"),
       cfg.as[Int](s"$path.keepVersions"),
       cfg.as[Int](s"$path.mempoolCapacity"),
-      cfg.as[Int](s"$path.blacklistCapacity")
+      cfg.as[Int](s"$path.blacklistCapacity"),
+      cfg.as[Int](s"$path.snapshotCreationInterval"),
+      cfg.as[Int](s"$path.keepLastSnapshots")
     )
   }
 

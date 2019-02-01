@@ -3,6 +3,7 @@ package org.ergoplatform.serialization
 import org.ergoplatform.modifiers.ErgoNodeViewModifier
 import org.ergoplatform.modifiers.history._
 import org.ergoplatform.modifiers.mempool.{ErgoBoxSerializer, ErgoTransactionSerializer, TransactionIdsForHeaderSerializer}
+import org.ergoplatform.modifiers.state.{UtxoSnapshotChunkSerializer, UtxoSnapshotManifestSerializer}
 import org.ergoplatform.nodeView.history.ErgoSyncInfoSerializer
 import org.ergoplatform.nodeView.state.{ErgoStateContext, ErgoStateContextSerializer}
 import org.ergoplatform.settings.Constants
@@ -90,6 +91,14 @@ class SerializationTests extends ErgoPropertyTest with scorex.testkit.Serializat
 
   property("TransactionIdsForHeader serialization") {
     checkSerializationRoundtrip(transactionIdsForHeaderGen, TransactionIdsForHeaderSerializer)
+  }
+
+  property("UTXOSnapshotChunk serialization") {
+    checkSerializationRoundtrip(randomUtxoSnapshotChunkGen, UtxoSnapshotChunkSerializer)
+  }
+
+  property("UTXOSnapshotManifest serialization") {
+    checkSerializationRoundtrip(randomUtxoSnapshotManifestGen, UtxoSnapshotManifestSerializer)
   }
 
 }

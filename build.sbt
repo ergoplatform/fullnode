@@ -24,10 +24,12 @@ libraryDependencies ++= Seq(
     .exclude("ch.qos.logback", "logback-classic")
     .exclude("org.scorexfoundation", "scrypto"),
   "org.scala-lang.modules" %% "scala-async" % "0.9.7",
-  ("org.scorexfoundation" %% "avl-iodb" % "0.2.15").exclude("ch.qos.logback", "logback-classic"),
+  ("org.scorexfoundation" %% "avl-iodb" % "0.2.15")
+    .exclude("ch.qos.logback", "logback-classic"),
   "org.scorexfoundation" %% "iodb" % "0.3.2",
-  ("org.scorexfoundation" %% "scorex-core" % scorexVersion).exclude("ch.qos.logback", "logback-classic"),
-
+  ("org.scorexfoundation" %% "scorex-core" % scorexVersion)
+    .exclude("ch.qos.logback", "logback-classic"),
+  "org.scorexfoundation" %% "scrypto" % "2.1.5",
   "javax.xml.bind" % "jaxb-api" % "2.+",
   "com.iheart" %% "ficus" % "1.4.+",
   "ch.qos.logback" % "logback-classic" % "1.2.3",
@@ -97,6 +99,7 @@ test in assembly := {}
 assemblyMergeStrategy in assembly := {
   case "logback.xml" => MergeStrategy.first
   case "module-info.class" => MergeStrategy.discard
+  case PathList("javax", "activation", xs @ _*) => MergeStrategy.last
   case other => (assemblyMergeStrategy in assembly).value(other)
 }
 

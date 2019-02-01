@@ -1,8 +1,8 @@
-package org.ergoplatform.nodeView.history.storage.modifierprocessors.popow
+package org.ergoplatform.nodeView.history.modifierprocessors.popow
 
 import org.ergoplatform.modifiers.ErgoPersistentModifier
 import org.ergoplatform.modifiers.history.{Header, HeaderChain, PoPoWProof}
-import org.ergoplatform.nodeView.history.storage.modifierprocessors.HeadersProcessor
+import org.ergoplatform.nodeView.history.modifierprocessors.HeadersProcessor
 import scorex.core.consensus.History.ProgressInfo
 import scorex.util.ScorexLogging
 

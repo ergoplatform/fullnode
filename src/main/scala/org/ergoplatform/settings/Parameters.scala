@@ -10,7 +10,6 @@ import scorex.core.serialization.Serializer
 
 import scala.util.Try
 
-
 /**
   * System parameters which could be readjusted via collective miners decision.
   */
@@ -177,26 +176,26 @@ class Parameters(val height: Height, val parametersTable: Map[Byte, Int]) {
 
 object Parameters {
 
-  val SoftFork = 120: Byte
-  val SoftForkVotesCollected = 121: Byte
-  val SoftForkStartingHeight = 122: Byte
-  val BlockVersion = 123: Byte
+  val SoftFork: Byte = 120
+  val SoftForkVotesCollected: Byte = 121
+  val SoftForkStartingHeight: Byte = 122
+  val BlockVersion: Byte = 123
 
   //A vote for nothing
-  val NoParameter = 0: Byte
+  val NoParameter: Byte = 0
 
   //Parameter identifiers
-  val StorageFeeFactorIncrease = 1: Byte
-  val StorageFeeFactorDecrease = (-StorageFeeFactorIncrease).toByte
+  val StorageFeeFactorIncrease: Byte = 1
+  val StorageFeeFactorDecrease: Byte = (-StorageFeeFactorIncrease).toByte
 
-  val MinValuePerByteIncrease = 2: Byte
-  val MinValuePerByteDecrease = (-MinValuePerByteIncrease).toByte
+  val MinValuePerByteIncrease: Byte = 2
+  val MinValuePerByteDecrease: Byte = (-MinValuePerByteIncrease).toByte
 
-  val MaxBlockSizeIncrease = 3: Byte
-  val MaxBlockSizeDecrease = (-MaxBlockSizeIncrease).toByte
+  val MaxBlockSizeIncrease: Byte = 3
+  val MaxBlockSizeDecrease: Byte = (-MaxBlockSizeIncrease).toByte
 
-  val MaxBlockCostIncrease = 4: Byte
-  val MaxBlockCostDecrease = (-MaxBlockCostIncrease).toByte
+  val MaxBlockCostIncrease: Byte = 4
+  val MaxBlockCostDecrease: Byte = (-MaxBlockCostIncrease).toByte
 
   val StorageFeeFactorDefault = 1250000
   val StorageFeeFactorMax = 2500000
@@ -208,7 +207,7 @@ object Parameters {
   val MinValueMin = 0
   val MinValueMax = 10000 //0.00001 Erg
 
-  lazy val parametersDescs: Map[Byte, String] = Map(
+  val parametersDescs: Map[Byte, String] = Map(
     StorageFeeFactorIncrease -> "Storage fee factor (per byte per storage period)",
     MinValuePerByteIncrease -> "Minimum monetary value of a box",
     MaxBlockSizeIncrease -> "Maximum block size",
@@ -216,19 +215,19 @@ object Parameters {
     SoftFork -> "Soft-fork (increasing version of a block)"
   )
 
-  lazy val stepsTable: Map[Byte, Int] = Map(
+  val stepsTable: Map[Byte, Int] = Map(
     StorageFeeFactorIncrease -> StorageFeeFactorStep,
     MinValuePerByteIncrease -> MinValueStep
   )
 
-  lazy val minValues: Map[Byte, Int] = Map(
+  val minValues: Map[Byte, Int] = Map(
     StorageFeeFactorIncrease -> StorageFeeFactorMin,
     MinValuePerByteIncrease -> MinValueMin,
     MaxBlockSizeIncrease -> 16 * 1024,
     MaxBlockCostIncrease -> 16 * 1024
   )
 
-  lazy val maxValues: Map[Byte, Int] = Map(
+  val maxValues: Map[Byte, Int] = Map(
     StorageFeeFactorIncrease -> StorageFeeFactorMax,
     MinValuePerByteIncrease -> MinValueMax
   )
@@ -247,27 +246,28 @@ object Parameters {
         None
       }
     }.toMap
+    require(paramsTable.nonEmpty, s"Parameters table is empty in extension: $extension")
     Parameters(h, paramsTable)
   }
 
   //Check that calculated parameters are matching ones written in the extension section of the block
   def matchParameters(p1: Parameters, p2: Parameters): Try[Unit] = Try {
     if (p1.height != p2.height) {
-      throw new Error(s"Different height in parameters, p1 = $p1, p2 = $p2")
+      throw new Exception(s"Different height in parameters, p1 = $p1, p2 = $p2")
     }
     if (p1.parametersTable.size != p2.parametersTable.size) {
-      throw new Error(s"Parameters differ in size, p1 = $p1, p2 = $p2")
+      throw new Exception(s"Parameters differ in size, p1 = $p1, p2 = $p2")
     }
     p1.parametersTable.foreach { case (k, v) =>
       val v2 = p2.parametersTable(k)
-      if (v2 != v) {
-        throw new Error(s"Calculated and received parameters differ in parameter $k ($v != $v2)")
-      }
+      if (v2 != v) throw new Exception(s"Calculated and received parameters differ in parameter $k ($v != $v2)")
     }
   }
+
 }
 
 object ParametersSerializer extends Serializer[Parameters] with ApiCodecs {
+
   override def toBytes(params: Parameters): Array[Byte] = {
     require(params.parametersTable.nonEmpty, s"$params is empty")
     Ints.toByteArray(params.height) ++
@@ -281,7 +281,7 @@ object ParametersSerializer extends Serializer[Parameters] with ApiCodecs {
     Parameters(height, table)
   }
 
-  implicit val jsonEncoder: Encoder[Parameters] = (p: Parameters) =>
+  implicit val jsonEncoder: Encoder[Parameters] = { p: Parameters =>
     Map(
       "height" -> p.height.asJson,
       "blockVersion" -> p.blockVersion.asJson,
@@ -290,5 +290,6 @@ object ParametersSerializer extends Serializer[Parameters] with ApiCodecs {
       "maxBlockSize" -> p.maxBlockSize.asJson,
       "maxBlockCost" -> p.maxBlockCost.asJson
     ).asJson
+  }
 
 }

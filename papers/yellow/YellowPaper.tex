@@ -233,30 +233,35 @@ Its regular modifiers processing is the same as for fullnode regime, while its b
 \begin{minted}{java}
 if(History.apply(header).isSuccess) {
     if(!(localScore == networkScore)) GOTO 1
-    else GOTO 5
- } else {
-    blacklist peer
- }
+        else GOTO 5
+    } else {
+        blacklist peer
+    }
+}
 \end{minted}
 
-\item Request historical UTXOManifest for at least BlocksToKeep back.
+\item Request nearest UtxoSnapshotManifest that is at least blocksToKeep back and satisfies all security requirements.
 
-\item On receiving UTXOSnapshotManifest:
+\item On receiving UtxoSnapshotManifest:
 
 \begin{minted}{java}
-UTXOSnapshotManifest.chunks.foreach { chunk =>
+UtxoSnapshotManifest.chunks.foreach { chunk =>
     request chunk from sender() //Or from random fullnode
-  }
+}
 \end{minted}
-\item On receiving UTXOSnapshotChunk:
+\item On receiving UtxoSnapshotChunk:
 \begin{minted}{java}
-State.applyChunk(UTXOSnapshotChunk) match {
-     case Success(Some(newMinimalState)) => GOTO 8
+History.applyChunk(UtxoSnapshotChunk) match {
+     case Success(Some(newMinimalState)) =>
+        State.applySnapshot(UtxoSnapshot(UtxoSnapshotManifest, Seq[UtxoSnapshotChunk])) match {
+            case Success(_) => GOTO 8
+            case Failure(_) => ???
+                //UTXOSnapshotChunk or constcucted state roothash is invalid
+        }
      case Success(None) => stay at 7
-     /*we need more chunks to construct state.
-     TODO periodicaly request missed chunks*/
-     case Failure(e) => ???
-     //UTXOSnapshotChunk or constcucted state roothash is invalid
+        // Wait for more chunks
+     case Failure(e) =>
+        // Invalidate modifier
   }
 \end{minted}
 
