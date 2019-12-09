@@ -9,7 +9,6 @@ dependencyOverrides in ThisBuild ++= Seq(
   "com.google.code.findbugs" % "jsr305" % "3.0.2",
   "com.google.guava" % "guava" % "21.0",
   "com.iheart" % "ficus_2.12" % "1.4.7",
-  "com.joefkelley" % "argyle_2.12" % "1.0.0",
   "com.lihaoyi" % "fastparse-utils_2.12" % "1.0.0",
   "com.lihaoyi" % "fastparse_2.12" % "1.0.0",
   "com.lihaoyi" % "sourcecode_2.12" % "0.1.4",
@@ -75,4 +74,4 @@ dependencyOverrides in ThisBuild ++= Seq(
   "org.typelevel" % "spire_2.12" % "0.14.1",
   "org.whispersystems" % "curve25519-java" % "0.5.0"
 )
-// LIBRARY_DEPENDENCIES_HASH 60d58deb9feef1242bf204377351644924f4f406
+// LIBRARY_DEPENDENCIES_HASH a0ff65502d6fd0b272512ffc96b2fb6474c51bac
