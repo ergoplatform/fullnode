@@ -160,44 +160,51 @@ class UtxoStateSpecification extends ErgoPropertyTest with ErgoTransactionGenera
   property("concurrent applyModifier() and proofsForTransactions()") {
     implicit val ec: ExecutionContextExecutor = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(4))
 
-    var bh = BoxHolder(Seq(genesisEmissionBox))
-    var us = createUtxoState(bh)
 
-    var height: Int = ErgoHistory.GenesisHeight
-    // generate chain of correct full blocks
-    val chain = (0 until 10) map { _ =>
-      val header = defaultHeaderGen.sample.value
-      val t = validTransactionsFromBoxHolder(bh, new Random(height))
-      val txs = t._1
-      bh = t._2
-      val (adProofBytes, adDigest) = us.proofsForTransactions(txs).get
-      val realHeader = header.copy(stateRoot = adDigest,
-        ADProofsRoot = ADProofs.proofDigest(adProofBytes),
-        height = height,
-        parentId = us.stateContext.lastHeaderOpt.map(_.id).getOrElse(Header.GenesisParentId))
-      val adProofs = ADProofs(realHeader.id, adProofBytes)
-      height = height + 1
-      val fb = ErgoFullBlock(realHeader, BlockTransactions(realHeader.id, txs), genExtension(realHeader, us.stateContext), Some(adProofs))
-      us = us.applyModifier(fb).get
-      fb
-    }
-    // create new genesis state
-    var us2 = createUtxoState(BoxHolder(Seq(genesisEmissionBox)))
-    val stateReader = us2.getReader.asInstanceOf[UtxoState]
-    // parallel thread that generates proofs
-    Future {
-      (0 until 1000) foreach { _ =>
-        Try {
-          val boxes = stateReader.randomBox().toSeq
-          val txs = validTransactionsFromBoxes(400, boxes, new Random)._1
-          stateReader.proofsForTransactions(txs).get
+      var bh = BoxHolder(Seq(genesisEmissionBox))
+      var state = createUtxoState(bh)
+
+      var height: Int = ErgoHistory.GenesisHeight
+      // generate chain of correct full blocks
+      val chain = (0 until 10) map { _ =>
+        val header = defaultHeaderGen.sample.value
+        val t = validTransactionsFromBoxHolder(bh, new Random(height))
+        val txs = t._1
+        bh = t._2
+        val (adProofBytes, adDigest) = state.proofsForTransactions(txs).get
+        val realHeader = header.copy(stateRoot = adDigest,
+          ADProofsRoot = ADProofs.proofDigest(adProofBytes),
+          height = height,
+          parentId = state.stateContext.lastHeaderOpt.map(_.id).getOrElse(Header.GenesisParentId))
+        val adProofs = ADProofs(realHeader.id, adProofBytes)
+        height = height + 1
+        val fb = ErgoFullBlock(realHeader, BlockTransactions(realHeader.id, txs), genExtension(realHeader, state.stateContext), Some(adProofs))
+        state = state.applyModifier(fb).get
+        fb
+      }
+      // create new genesis state
+      var state2 = createUtxoState(BoxHolder(Seq(genesisEmissionBox)))
+      val state2Reader = state2.getReader.asInstanceOf[UtxoState]
+
+      // parallel thread that generates proofs
+      Future {
+        (0 until 1000) foreach { _ =>
+          Try {
+            val boxes = state2Reader.randomBox().toSeq
+            val txs = validTransactionsFromBoxes(400, boxes, new Random)._1
+            state2Reader.proofsForTransactions(txs).get
+            state2Reader.persistentProver.checkTree(true)
+            state2Reader.persistentProver.checkTree(false)
+          }
         }
       }
-    }
-    // apply chain of headers full block to state
-    chain.foreach { fb =>
-      us2 = us2.applyModifier(fb).get
-    }
+
+      // apply chain of headers full block to state
+      // "Calculated proofHash is not equal to the declared one" UtxoState: 121
+      chain.foreach { fb =>
+        state2 = state2.applyModifier(fb).get
+      }
+
   }
 
   property("proofsForTransactions() to be deterministic") {

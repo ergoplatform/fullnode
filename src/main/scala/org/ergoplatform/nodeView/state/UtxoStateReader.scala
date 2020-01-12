@@ -23,7 +23,7 @@ trait UtxoStateReader extends ErgoStateReader with TransactionValidation[ErgoTra
   private lazy val np = NodeParameters(keySize = 32, valueSize = None, labelSize = 32)
   protected lazy val storage = new VersionedLDBAVLStorage(store, np)
 
-  protected val persistentProver: PersistentBatchAVLProver[Digest32, HF]
+  protected[state] val persistentProver: PersistentBatchAVLProver[Digest32, HF]
 
   /**
     * Validate transaction against provided state context, if specified,

@@ -134,7 +134,6 @@ class UtxoState(override val persistentProver: PersistentBatchAVLProver[Digest32
             .ensuring(java.util.Arrays.equals(persistentProver.digest, inRoot))
           Failure(e)
         }
-
       }
 
     case h: Header =>
