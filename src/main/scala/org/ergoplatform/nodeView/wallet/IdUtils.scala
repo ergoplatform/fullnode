@@ -4,26 +4,21 @@ import org.ergoplatform.ErgoBox.{BoxId, TokenId}
 import org.ergoplatform.settings.Algos
 import scorex.crypto.authds.ADKey
 import scorex.crypto.hash.Digest32
-import supertagged.TaggedType
+import scorex.util._
 
 object IdUtils {
 
-  object EncodedBoxId extends TaggedType[String]
 
-  object EncodedTokenId extends TaggedType[String]
+  type EncodedBoxId = ModifierId
 
-  type EncodedBoxId = EncodedBoxId.Type
+  type EncodedTokenId = ModifierId
 
-  type EncodedTokenId = EncodedTokenId.Type
+  def encodedBoxId(id: BoxId): EncodedBoxId = bytesToId(id)
 
-  def encodedBoxId(id: BoxId): EncodedBoxId = EncodedBoxId @@ Algos.encode(id)
+  def decodedBoxId(id: EncodedBoxId): BoxId = ADKey @@ idToBytes(id)
 
-  def decodedBoxId(id: EncodedBoxId): BoxId = ADKey @@ Algos.decode(id)
-    .getOrElse(throw new Error("Failed to decode box id"))
+  def encodedTokenId(id: TokenId): EncodedTokenId = bytesToId(id)
 
-  def encodedTokenId(id: TokenId): EncodedTokenId = EncodedTokenId @@ Algos.encode(id)
-
-  def decodedTokenId(id: EncodedTokenId): TokenId = Digest32 @@ Algos.decode(id)
-    .getOrElse(throw new Error("Failed to decode token id"))
+  def decodedTokenId(id: EncodedTokenId): TokenId = Digest32 @@ idToBytes(id)
 
 }

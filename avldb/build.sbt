@@ -5,7 +5,7 @@ name := "avldb"
 libraryDependencies ++= Seq(
   "javax.xml.bind" % "jaxb-api" % "2.4.0-b180830.0359",
   "ch.qos.logback" % "logback-classic" % "1.2.3",
-  "org.scorexfoundation" %% "scrypto" % "2.1.4"
+  "org.scorexfoundation" %% "scrypto" % "2.1.7"
 )
 
 libraryDependencies ++= Seq(

@@ -6,6 +6,7 @@ import org.ergoplatform.settings.Constants
 import scorex.core.serialization.ScorexSerializer
 import scorex.crypto.authds.ADKey
 import scorex.crypto.hash.Digest32
+import scorex.util.ModifierId
 import scorex.util.serialization.{Reader, Writer}
 
 final case class RegistryIndex(height: Int,

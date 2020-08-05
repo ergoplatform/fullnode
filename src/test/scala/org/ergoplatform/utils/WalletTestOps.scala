@@ -15,6 +15,7 @@ import org.ergoplatform.utils.fixtures.WalletFixture
 import org.ergoplatform.wallet.TokensMap
 import scorex.crypto.hash.{Blake2b256, Digest32}
 import scorex.util.bytesToId
+import scorex.util.encode.Base16
 import sigmastate.Values.ErgoTree
 import sigmastate.basics.DLogProtocol.ProveDlog
 import sigmastate.eval.Extensions._

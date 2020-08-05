@@ -16,7 +16,7 @@ object Algos extends ErgoAlgos with scorex.core.utils.ScorexEncoding {
 
   lazy val emptyMerkleTreeRoot: Digest32 = Algos.hash(LeafData @@ Array[Byte]())
 
-  @inline def encode(id: ModifierId): String = encoder.encode(id)
+  @inline def encode(id: ModifierId): String = encoder.encode(id.toString)
 
   /**
     * A method to build a Merkle tree over binary objects (leafs of the tree)

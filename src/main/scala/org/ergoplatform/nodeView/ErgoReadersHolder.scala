@@ -43,7 +43,7 @@ class ErgoReadersHolder(viewHolderRef: ActorRef) extends Actor with ScorexLoggin
         case (Some(h), Some(s), Some(m), Some(w)) => sender ! Readers(h, s, m, w)
         case m =>
           val msgSender = sender()
-          context.system.scheduler.scheduleOnce(2.seconds)(self.tell(GetReaders, msgSender))(context.system.dispatcher)
+          context.system.scheduler.scheduleOnce(0.seconds)(self.tell(GetReaders, msgSender))(context.system.dispatcher)
           log.warn(s"Got GetReaders request in state $m")
       }
 

@@ -25,7 +25,7 @@ class HistoryStorage(indexStore: LDBKVStore, objectsStore: LDBKVStore, config: C
 
   private val modifiersCache = CacheBuilder.newBuilder()
     .maximumSize(config.modifiersCacheSize)
-    .build[String, ErgoPersistentModifier]
+    .build[ModifierId, ErgoPersistentModifier]
 
   private val indexCache = CacheBuilder.newBuilder()
     .maximumSize(config.indexesCacheSize)
@@ -40,7 +40,7 @@ class HistoryStorage(indexStore: LDBKVStore, objectsStore: LDBKVStore, config: C
             modifiersCache.put(id, pm)
             Some(pm)
           case Failure(_) =>
-            log.warn(s"Failed to parse modifier ${encoder.encode(id)} from db (bytes are: ${Algos.encode(bytes)})")
+            log.warn(s"Failed to parse modifier ${id} from db (bytes are: ${Algos.encode(bytes)})")
             None
         }
       }

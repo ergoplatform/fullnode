@@ -55,7 +55,7 @@ class UtxoState(override val persistentProver: PersistentBatchAVLProver[Digest32
 
   override def rollbackTo(version: VersionTag): Try[UtxoState] = persistentProver.synchronized {
     val p = persistentProver
-    log.info(s"Rollback UtxoState to version ${Algos.encoder.encode(version)}")
+    log.info(s"Rollback UtxoState to version ${version}")
     store.get(scorex.core.versionToBytes(version)) match {
       case Some(hash) =>
         val rootHash: ADDigest = ADDigest @@ hash
@@ -65,7 +65,7 @@ class UtxoState(override val persistentProver: PersistentBatchAVLProver[Digest32
         store.clean(constants.keepVersions)
         rollbackResult
       case None =>
-        Failure(new Error(s"Unable to get root hash at version ${Algos.encoder.encode(version)}"))
+        Failure(new Error(s"Unable to get root hash at version ${version}"))
     }
   }
 

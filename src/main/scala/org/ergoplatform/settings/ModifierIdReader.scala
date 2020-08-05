@@ -6,7 +6,7 @@ import scorex.util.ModifierId
 trait ModifierIdReader {
 
   implicit val modifierIdReader: ValueReader[ModifierId] = { (cfg, path) =>
-    ModifierId @@ cfg.getString(path)
+    ModifierId(cfg.getString(path))
   }
 
 }

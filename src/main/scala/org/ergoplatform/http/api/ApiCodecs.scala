@@ -47,14 +47,14 @@ trait ApiCodecs extends JsonCodecs {
 
   implicit val proveDlogEncoder: Encoder[ProveDlog] = _.pkBytes.asJson
 
-  implicit val encodedTokenIdEncoder: Encoder[EncodedTokenId] = _.asJson
+  implicit val encodedTokenIdEncoder: Encoder[EncodedTokenId] = _.hashBytes.asJson
 
   implicit val balancesSnapshotEncoder: Encoder[RegistryIndex] = { v =>
     import v._
     Json.obj(
       "height" -> height.asJson,
       "balance" -> balance.asJson,
-      "assets" -> assetBalances.map(x => (x._1: String, x._2)).asJson
+      "assets" -> assetBalances.map(x => (x._1.toString(), x._2)).asJson
     )
   }
 

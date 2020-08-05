@@ -84,12 +84,12 @@ class DigestState protected(override val version: VersionTag,
 
   @SuppressWarnings(Array("OptionGet"))
   override def rollbackTo(version: VersionTag): Try[DigestState] = {
-    log.info(s"Rollback Digest State to version ${Algos.encoder.encode(version)}")
+    log.info(s"Rollback Digest State to version ${version}")
     val versionBytes = scorex.core.versionToBytes(version)
     Try(store.rollbackTo(versionBytes)).map { _ =>
       store.clean(nodeSettings.keepVersions)
       val rootHash = ADDigest @@ store.get(versionBytes).get
-      log.info(s"Rollback to version ${Algos.encoder.encode(version)} with roothash ${Algos.encoder.encode(rootHash)}")
+      log.info(s"Rollback to version ${version} with roothash ${Algos.encoder.encode(rootHash)}")
       new DigestState(version, rootHash, store, ergoSettings)
     }
   }
@@ -192,7 +192,7 @@ object DigestState extends ScorexLogging with ScorexEncoding {
       case Success(state) => state
       case Failure(e) =>
         store.close()
-        log.warn(s"Failed to create state with ${versionOpt.map(encoder.encode)} and ${rootHashOpt.map(encoder.encode)}", e)
+        log.warn(s"Failed to create state with ${versionOpt.getOrElse('?')} and ${rootHashOpt.map(encoder.encode)}", e)
         ErgoState.generateGenesisDigestState(dir, constants.settings)
     }
   }

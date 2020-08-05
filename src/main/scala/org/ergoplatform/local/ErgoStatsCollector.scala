@@ -16,7 +16,7 @@ import scorex.core.network.NetworkController.ReceivableMessages.GetConnectedPeer
 import scorex.core.network.NodeViewSynchronizer.ReceivableMessages._
 import scorex.core.network.peer.PeerInfo
 import scorex.core.utils.NetworkTimeProvider
-import scorex.util.ScorexLogging
+import scorex.util.{ModifierId, ScorexLogging}
 
 import scala.concurrent.duration._
 
@@ -67,7 +67,7 @@ class ErgoStatsCollector(readersHolder: ActorRef,
         fullBlocksScore = h.bestFullBlockOpt.flatMap(m => h.scoreOf(m.id)),
         genesisBlockIdOpt = h.headerIdsAtHeight(ErgoHistory.GenesisHeight).headOption,
         stateRoot = Some(Algos.encode(s.rootHash)),
-        stateVersion = Some(s.version),
+        stateVersion = Some(s.version.toString),
         parameters = s.stateContext.currentParameters
       )
   }
@@ -130,7 +130,7 @@ object ErgoStatsCollector {
                       bestFullBlockOpt: Option[ErgoFullBlock],
                       fullBlocksScore: Option[BigInt],
                       launchTime: Long,
-                      genesisBlockIdOpt: Option[String],
+                      genesisBlockIdOpt: Option[ModifierId],
                       parameters: Parameters)
 
   object NodeInfo extends ApiCodecs {

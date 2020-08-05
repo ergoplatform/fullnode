@@ -137,8 +137,8 @@ class JsonSerializationSpec extends ErgoPropertyTest with WalletGenerators with 
     c.downField("spendingHeight").as[Option[Int]] shouldBe Right(b.spendingHeightOpt)
     checkErgoBox(c.downField("box"), b.box)
     if (!opts.showDetails) {
-      c.downField("creationTransactionId").as[String] shouldBe Right(b.creationTxId)
-      c.downField("spendingTransactionId").as[Option[String]] shouldBe Right(b.spendingTxIdOpt)
+      c.downField("creationTransactionId").as[String] shouldBe Right(b.creationTxId.toString)
+      c.downField("spendingTransactionId").as[Option[String]] shouldBe Right(b.spendingTxIdOpt.map(_.toString))
     }
   }
 

@@ -7,6 +7,7 @@ import org.ergoplatform.settings.ValidationRules._
 import scorex.core.utils.ScorexEncoding
 import scorex.core.validation.{ModifierValidator, ValidationState}
 import scorex.util.bytesToId
+import scorex.util.encode.Base16
 
 /**
   * Class that implements extension validation based on current to ErgoValidationSettings
@@ -20,7 +21,7 @@ class ExtensionValidator[T](validationState: ValidationState[T]) extends ScorexE
     validateInterlinks(extension, header, prevExtensionOpt, prevHeaderOpt)
       .validate(exKeyLength, extension.fields.forall(_._1.lengthCompare(Extension.FieldKeySize) == 0), extension.encodedId)
       .validate(exValueLength, extension.fields.forall(_._2.lengthCompare(Extension.FieldValueMaxSize) <= 0), extension.encodedId)
-      .validate(exDuplicateKeys, extension.fields.map(kv => bytesToId(kv._1)).distinct.length == extension.fields.length, extension.encodedId)
+      .validate(exDuplicateKeys, extension.fields.map(kv => Base16.encode(kv._1)).distinct.length == extension.fields.length, extension.encodedId)
       .validate(exEmpty, header.isGenesis || extension.fields.nonEmpty, extension.encodedId)
   }
 

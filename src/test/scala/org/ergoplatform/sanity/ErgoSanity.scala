@@ -17,7 +17,7 @@ import org.scalacheck.Gen
 import scorex.core.settings.NetworkSettings
 import scorex.core.transaction.state.MinimalState
 import scorex.core.utils.NetworkTimeProvider
-import scorex.core.{PersistentNodeViewModifier, bytesToId}
+import scorex.core.{PersistentNodeViewModifier, bytesToId, idToBytes}
 import scorex.crypto.authds.ADDigest
 import scorex.crypto.hash.{Blake2b256, Digest32}
 import scorex.testkit.generators.{ModifierProducerTemplateItem, SynInvalid, Valid}
@@ -71,9 +71,9 @@ trait ErgoSanity[ST <: MinimalState[PM, ST]] extends HistoryTests[TX, PM, SI, HT
   def makeSyntacticallyInvalid(mod: PM): PM = mod match {
     case fb: ErgoFullBlock =>
       val parentId = fb.header.parentId
-      val header = fb.header.copy(parentId = bytesToId(hf(parentId)))
+      val header = fb.header.copy(parentId = bytesToId(hf(idToBytes(parentId))))
       fb.copy(header = header)
-    case h: Header => h.copy(parentId = bytesToId(hf(h.parentId)))
+    case h: Header => h.copy(parentId = bytesToId(hf(idToBytes(h.parentId))))
     case v => v
   }
 

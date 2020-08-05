@@ -137,7 +137,7 @@ abstract class ErgoNodeViewHolder[State <: ErgoState[State]](settings: ErgoSetti
         log.info("State and history are both empty on startup")
         Success(stateIn)
       case (stateId, Some(block), _) if stateId == block.id =>
-        log.info(s"State and history have the same version ${encoder.encode(stateId)}, no recovery needed.")
+        log.info(s"State and history have the same version ${stateId}, no recovery needed.")
         Success(stateIn)
       case (_, None, _) =>
         log.info("State and history are inconsistent. History is empty on startup, rollback state to genesis.")
