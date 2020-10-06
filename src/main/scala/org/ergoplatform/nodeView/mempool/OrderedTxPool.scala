@@ -121,12 +121,12 @@ case class OrderedTxPool(orderedTransactions: TreeMap[WeightedTxId, ErgoTransact
       pool.outputs.get(input.boxId).fold(pool)(wtx => {
         pool.orderedTransactions.get(wtx) match {
           case Some(parent) =>
-            val newWtx = WeightedTxId(wtx.id, wtx.weight + weight)
+            val newWtx = WeightedTxId(wtx.id, wtx.weight + weight/tx.inputs.size)
             val newPool = OrderedTxPool(pool.orderedTransactions - wtx + (newWtx -> parent),
               pool.transactionsRegistry.updated(parent.id, newWtx),
               invalidated,
               parent.outputs.foldLeft(pool.outputs)((newOutputs, box) => newOutputs.updated(box.id, newWtx)))
-            newPool.updateFamily(parent, weight)
+            newPool.updateFamily(parent, weight/tx.inputs.size)
           case None =>
             //shouldn't be the case, but better not to hide this possibility
             log.error("Could not find transaction in pool.orderedTransactions, please report to devs")
