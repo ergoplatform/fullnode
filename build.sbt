@@ -95,6 +95,13 @@ val opts = Seq(
 javaOptions in run ++= opts
 scalacOptions ++= Seq("-Xfatal-warnings", "-feature", "-deprecation")
 
+javaOptions in Universal ++= Seq(
+    // -J params will be added as jvm parameters
+    "--mainnet",
+    "-c setting.conf"
+)
+sources in (Compile, doc) := Seq.empty
+
 sourceGenerators in Compile += Def.task {
   val versionFile = (sourceManaged in Compile).value / "org" / "ergoplatform" / "Version.scala"
   IO.write(versionFile,
