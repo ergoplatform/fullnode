@@ -36,7 +36,7 @@ object PoPowAlgos {
       require(prevInterlinks.nonEmpty, "Interlinks vector could not be empty in case of non-genesis header")
       val genesis = prevInterlinks.head
       val tail = prevInterlinks.tail
-      val prevLevel = maxLevelOf(prevHeader)
+      val prevLevel = maxLevelOf(prevHeader) & 0xFF
       if (prevLevel > 0) {
         (genesis +: tail.dropRight(prevLevel)) ++ Seq.fill(prevLevel)(prevHeader.id)
       } else {
@@ -109,11 +109,13 @@ object PoPowAlgos {
     */
   private def maxLevelOf(header: Header): Int = {
     if (!header.isGenesis) {
-      def log2(x: Double) = math.log(x) / math.log(2)
+      def log2(x: BigInt) : Double = {
+        math.log(x.doubleValue()) / math.log(2)
+      }
 
       val requiredTarget = org.ergoplatform.mining.q / RequiredDifficulty.decodeCompactBits(header.nBits)
       val realTarget = header.powSolution.d
-      val level = log2(requiredTarget.doubleValue) - log2(realTarget.doubleValue)
+      val level = log2(requiredTarget) - log2(realTarget)
       level.toInt
     } else {
       Int.MaxValue
