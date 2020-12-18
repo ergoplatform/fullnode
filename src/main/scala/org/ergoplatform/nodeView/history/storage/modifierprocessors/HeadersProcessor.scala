@@ -250,9 +250,20 @@ trait HeadersProcessor extends ToDownloadProcessor with ScorexLogging with Score
     if (heights.lengthCompare(1) == 0) {
       difficultyCalculator.calculate(Seq(parent))
     } else {
-      val chain = headerChainBack(heights.max - heights.min + 1, parent, _ => false)
-      val headers = chain.headers.filter(p => heights.contains(p.height))
-      difficultyCalculator.calculate(headers)
+       lazy val chain = headerChainBack(heights.max - heights.min + 1, parent, _ => false)
+       val headers: Seq[Header] =
+         heights.flatMap(height => {
+           val layer = headerIdsAtHeight(height)
+           if (layer.size == 1) {
+             typedModifierById[Header](layer.head)
+           } else {
+             chain.headers.find(_.height == height)
+           }
+         })
+       if(headers.length != heights.length){
+         log.error("Error when obtaining headers for difficulty calculation")
+       }
+       difficultyCalculator.calculate(headers)
     }
   }
 

@@ -24,10 +24,10 @@ class LinearDifficultyControl(val chainSettings: ChainSettings) extends ScorexLo
     * @return heights of previous headers required for block recalculation
     */
   def previousHeadersRequiredForRecalculation(height: Height): Seq[Int] = {
-    if ((height - 1) % epochLength == 0 && epochLength > 1) {
-      (0 to useLastEpochs).map(i => (height - 1) - i * epochLength).filter(_ >= 0).reverse
-    } else if ((height - 1) % epochLength == 0 && height > epochLength * useLastEpochs) {
+    if ((height - 1) % epochLength == 0 && height > epochLength * useLastEpochs) {
       (0 to useLastEpochs).map(i => (height - 1) - i * epochLength).reverse
+    } else if ((height - 1) % epochLength == 0 && epochLength > 1) {
+      (0 to useLastEpochs).map(i => (height - 1) - i * epochLength).filter(_ >= 0).reverse
     } else {
       Seq(height - 1)
     }
