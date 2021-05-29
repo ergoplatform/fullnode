@@ -6,6 +6,7 @@ import org.ergoplatform.mining.AutolykosPowScheme
 import org.ergoplatform.mining.difficulty.LinearDifficultyControl
 import org.ergoplatform.modifiers.ErgoPersistentModifier
 import org.ergoplatform.modifiers.history._
+import org.ergoplatform.modifiers.history.popow.NipopowAlgos
 import org.ergoplatform.nodeView.history.ErgoHistory
 import org.ergoplatform.nodeView.history.ErgoHistory.{Difficulty, GenesisHeight}
 import org.ergoplatform.nodeView.history.storage.HistoryStorage
@@ -34,7 +35,9 @@ trait HeadersProcessor extends ToDownloadProcessor with ScorexLogging with Score
 
   val powScheme: AutolykosPowScheme
 
-  //Maximum time in future block header may contain
+  val nipopowAlgos: NipopowAlgos = new NipopowAlgos(powScheme)
+
+  // Maximum time in future block header may have
   protected lazy val MaxTimeDrift: Long = 10 * chainSettings.blockInterval.toMillis
 
   lazy val difficultyCalculator = new LinearDifficultyControl(chainSettings)
@@ -184,6 +187,10 @@ trait HeadersProcessor extends ToDownloadProcessor with ScorexLogging with Score
         bytesToId(bs.take(32))
       }
     }
+  }
+
+  def bestHeaderAtHeight(h: Int): Option[Header] = bestHeaderIdAtHeight(h).flatMap { id =>
+    typedModifierById[Header](id)
   }
 
   /**

@@ -1,7 +1,7 @@
 package org.ergoplatform.nodeView.history.storage.modifierprocessors
 
-import org.ergoplatform.modifiers.history.PoPowAlgos._
-import org.ergoplatform.modifiers.history.{Extension, ExtensionCandidate, Header, PoPowAlgos}
+import org.ergoplatform.modifiers.history.popow.NipopowAlgos
+import org.ergoplatform.modifiers.history.{Extension, ExtensionCandidate, Header}
 import org.ergoplatform.settings.ValidationRules._
 import scorex.core.utils.ScorexEncoding
 import scorex.core.validation.ValidationState
@@ -10,7 +10,7 @@ import scorex.util.bytesToId
 /**
   * Class that implements extension validation based on current to ErgoValidationSettings
   */
-class ExtensionValidator[T](validationState: ValidationState[T], popowAlgos: PoPowAlgos) extends ScorexEncoding {
+class ExtensionValidator[T](validationState: ValidationState[T], popowAlgos: NipopowAlgos) extends ScorexEncoding {
 
   def validateExtension(extension: Extension,
                         header: Header,
@@ -29,8 +29,8 @@ class ExtensionValidator[T](validationState: ValidationState[T], popowAlgos: PoP
                                  prevHeaderOpt: Option[Header]): ValidationState[T] = {
     (prevHeaderOpt, prevExtensionOpt) match {
       case (Some(parent), Some(parentExt)) =>
-        val parentLinksTry = unpackInterlinks(parentExt.fields)
-        val currentLinksTry = unpackInterlinks(extension.fields)
+        val parentLinksTry = NipopowAlgos.unpackInterlinks(parentExt.fields)
+        val currentLinksTry = NipopowAlgos.unpackInterlinks(extension.fields)
 
         val expectedLinksTry = parentLinksTry
           .map { prev => popowAlgos.updateInterlinks(parent, prev) }

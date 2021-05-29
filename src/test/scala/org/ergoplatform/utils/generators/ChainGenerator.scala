@@ -2,8 +2,9 @@ package org.ergoplatform.utils.generators
 
 import org.ergoplatform.mining.difficulty.LinearDifficultyControl
 import org.ergoplatform.modifiers.{BlockSection, ErgoFullBlock, ErgoPersistentModifier}
-import org.ergoplatform.modifiers.history._
+import org.ergoplatform.modifiers.history.{Extension, ExtensionCandidate, Header, HeaderChain}
 import org.ergoplatform.modifiers.mempool.ErgoTransaction
+import org.ergoplatform.modifiers.history.popow.{NipopowAlgos, PoPowHeader}
 import org.ergoplatform.nodeView.history.ErgoHistory
 import org.ergoplatform.settings.Constants
 import org.ergoplatform.utils.{BoxUtils, ErgoTestConstants}
@@ -32,7 +33,7 @@ trait ChainGenerator extends ErgoTestConstants {
     val bestHeaderOpt = history.bestHeaderOpt
     val bestHeaderInterlinksOpt = bestHeaderOpt
       .flatMap(h => history.typedModifierById[Extension](h.extensionId))
-      .map(ext => PoPowAlgos.unpackInterlinks(ext.fields).get)
+      .map(ext => NipopowAlgos.unpackInterlinks(ext.fields).get)
       .getOrElse(Seq.empty)
     genHeaderChain(
       height,
@@ -65,6 +66,18 @@ trait ChainGenerator extends ErgoTestConstants {
     val headers = headerStream(prefix, control, diffBitsOpt = diffBitsOpt, useRealTs = useRealTs)
     val chain = Iterator.from(prefix.size).map(size => headers.take(size)).find(until).get
     HeaderChain(chain)
+  }
+
+  def popowHeaderChain(chain: HeaderChain): Seq[PoPowHeader] = {
+    chain.headers.foldLeft(Seq.empty[PoPowHeader], None: Option[PoPowHeader]) {
+      case ((acc, bestHeaderOpt), h) =>
+        val links = popowAlgos.updateInterlinks(
+          bestHeaderOpt.map(_.header),
+          bestHeaderOpt.map(ph => popowAlgos.interlinksToExtension(ph.interlinks).toExtension(ph.id))
+        )
+        val poPowH = PoPowHeader(h, links)
+        (acc :+ poPowH, Some(poPowH))
+    }._1
   }
 
   private def headerStream(prefix: Option[Header],
@@ -138,8 +151,8 @@ trait ChainGenerator extends ErgoTestConstants {
                 blockVersion: Version = Header.InitialVersion,
                 nBits: Long = settings.chainSettings.initialNBits): ErgoFullBlock = {
     val interlinks = prev.toSeq.flatMap(x =>
-      popowAlgos.updateInterlinks(x.header, PoPowAlgos.unpackInterlinks(x.extension.fields).get))
-    val validExtension = extension ++ PoPowAlgos.interlinksToExtension(interlinks)
+      popowAlgos.updateInterlinks(x.header, NipopowAlgos.unpackInterlinks(x.extension.fields).get))
+    val validExtension = extension ++ popowAlgos.interlinksToExtension(interlinks)
     powScheme.proveBlock(
       prev.map(_.header),
       blockVersion,

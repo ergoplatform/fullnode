@@ -6,8 +6,8 @@ import org.ergoplatform._
 import org.ergoplatform.mining.difficulty.RequiredDifficulty
 import org.ergoplatform.mining.{AutolykosPowScheme, CandidateBlock, ErgoMiner}
 import org.ergoplatform.modifiers.ErgoFullBlock
-import org.ergoplatform.modifiers.history.PoPowAlgos._
-import org.ergoplatform.modifiers.history.{Extension, ExtensionCandidate, Header, PoPowAlgos}
+import org.ergoplatform.modifiers.history.popow.NipopowAlgos
+import org.ergoplatform.modifiers.history.{Extension, ExtensionCandidate, Header}
 import org.ergoplatform.modifiers.mempool.{ErgoTransaction, UnsignedErgoTransaction}
 import org.ergoplatform.nodeView.history.ErgoHistory
 import org.ergoplatform.nodeView.history.ErgoHistory.Height
@@ -160,11 +160,11 @@ object ChainGenerator extends App with ErgoTestHelpers {
     val interlinks = lastHeaderOpt
       .flatMap { h =>
         history.typedModifierById[Extension](h.extensionId)
-          .flatMap(ext => unpackInterlinks(ext.fields).toOption)
+          .flatMap(ext => NipopowAlgos.unpackInterlinks(ext.fields).toOption)
           .map(popowAlgos.updateInterlinks(h, _))
       }
       .getOrElse(Seq.empty)
-    val interlinksExtension = interlinksToExtension(interlinks)
+    val interlinksExtension = popowAlgos.interlinksToExtension(interlinks)
 
     val (extensionCandidate, votes: Array[Byte], version: Byte) = lastHeaderOpt.map { header =>
       val newHeight = header.height + 1
@@ -182,7 +182,7 @@ object ChainGenerator extends App with ErgoTestHelpers {
           newParams.suggestVotes(settings.votingTargets.targets, voteForFork),
           newParams.blockVersion)
       } else {
-        (interlinksToExtension(interlinks),
+        (popowAlgos.interlinksToExtension(interlinks),
           currentParams.vote(settings.votingTargets.targets, stateContext.votingData.epochVotes, voteForFork),
           currentParams.blockVersion)
       }
@@ -204,12 +204,12 @@ object ChainGenerator extends App with ErgoTestHelpers {
       case Some(fb) => fb
       case _ =>
         val interlinks = candidate.parentOpt
-          .map(popowAlgos.updateInterlinks(_, PoPowAlgos.unpackInterlinks(candidate.extension.fields).get))
+          .map(popowAlgos.updateInterlinks(_, NipopowAlgos.unpackInterlinks(candidate.extension.fields).get))
           .getOrElse(Seq.empty)
         val minerTag = scorex.utils.Random.randomBytes(Extension.FieldKeySize)
         proveCandidate {
           candidate.copy(
-            extension = ExtensionCandidate(Seq(Array(0: Byte, 2: Byte) -> minerTag)) ++ PoPowAlgos.interlinksToExtension(interlinks)
+            extension = ExtensionCandidate(Seq(Array(0: Byte, 2: Byte) -> minerTag)) ++ popowAlgos.interlinksToExtension(interlinks)
           )
         }
     }

@@ -1,7 +1,7 @@
 openapi: "3.0.2"
 
 info:
-  version: "4.0.11"
+  version: "4.0.12"
   title: Ergo Node API
   description: API docs for Ergo Node. Models are shared between all Ergo products
   contact:
@@ -1243,6 +1243,48 @@ components:
         adProofsId:
           $ref: '#/components/schemas/ModifierId'
 
+    PopowHeader:
+      type: object
+      required:
+        - header
+        - interlinks
+      properties:
+        header:
+          $ref: '#/components/schemas/BlockHeader'
+        interlinks:
+          description: Array of header interlinks
+          type: array
+          items:
+            $ref: '#/components/schemas/ModifierId'
+
+    NipopowProof:
+      type: object
+      required:
+        - m
+        - k
+        - prefix
+        - suffixHead
+        - suffixTail
+      properties:
+        m:
+          description: security parameter (min μ-level superchain length)
+          type: number
+        k:
+          description: security parameter (min suffix length, >= 1)
+          type: number
+        prefix:
+          description: proof prefix headers
+          type: array
+          items:
+            $ref: '#/components/schemas/PopowHeader'
+        suffixHead:
+          $ref: '#/components/schemas/PopowHeader'
+        suffixTail:
+          description: tail of the proof suffix headers
+          type: array
+          items:
+            $ref: '#/components/schemas/BlockHeader'
+
     BlockHeader:
       type: object
       required:
@@ -1878,7 +1920,6 @@ components:
         error:
           type: string
 
-
     ApiError:
       type: object
       required:
@@ -2231,6 +2272,145 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /nipopow/popowHeaderById/{headerId}:
+    get:
+      summary: Construct PoPow header according to given header id
+      operationId: getPopowHeaderById
+      tags:
+        - nipopow
+      parameters:
+        - in: path
+          name: headerId
+          required: true
+          description: ID of wanted header
+          schema:
+            type: string
+      responses:
+        '200':
+          description: PoPow header object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PopowHeader'
+        '404':
+          description: Header of extension of a corresponding block are not available
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /nipopow/popowHeaderByHeight/{height}:
+    get:
+      summary: Construct PoPow header for best header at given height
+      operationId: getPopowHeaderByHeight
+      tags:
+        - nipopow
+      parameters:
+        - in: path
+          name: height
+          required: true
+          description: Height of a wanted header
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: PoPow header object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PopowHeader'
+        '404':
+          description: Header of extension of a corresponding block are not available
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /nipopow/proof/{minChainLength}/{suffixLength}:
+    get:
+      summary: Construct PoPoW proof for given min superchain length and suffix length
+      operationId: getPopowProof
+      tags:
+        - nipopow
+      parameters:
+        - in: path
+          name: minChainLength
+          required: true
+          description: Minimal superchain length
+          schema:
+            type: number
+        - in: path
+          name: suffixLength
+          required: true
+          description: Suffix length
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Nipopow proof object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NipopowProof'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /nipopow/proof/{minChainLength}/{suffixLength}/{headerId}:
+    get:
+      summary: Construct PoPoW proof for given min superchain length, suffix length and header ID
+      operationId: getPopowProofByHeaderId
+      tags:
+        - nipopow
+      parameters:
+        - in: path
+          name: minChainLength
+          required: true
+          description: Minimal superchain length
+          schema:
+            type: number
+        - in: path
+          name: suffixLength
+          required: true
+          description: Suffix length
+          schema:
+            type: number
+        - in: path
+          name: headerId
+          required: true
+          description: ID of wanted header
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Nipopow proof object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NipopowProof'
         default:
           description: Error
           content:

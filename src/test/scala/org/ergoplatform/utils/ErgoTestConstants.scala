@@ -4,7 +4,8 @@ import akka.util.Timeout
 import org.ergoplatform.mining.difficulty.LinearDifficultyControl
 import org.ergoplatform.mining.emission.EmissionRules
 import org.ergoplatform.mining.{AutolykosPowScheme, DefaultFakePowScheme}
-import org.ergoplatform.modifiers.history.{ExtensionCandidate, PoPowAlgos}
+import org.ergoplatform.modifiers.history.ExtensionCandidate
+import org.ergoplatform.modifiers.history.popow.NipopowAlgos
 import org.ergoplatform.nodeView.state.{ErgoState, ErgoStateContext, StateConstants, StateType, UpcomingStateContext}
 import org.ergoplatform.settings.Constants.HashLength
 import org.ergoplatform.settings.ValidationRules._
@@ -39,7 +40,7 @@ trait ErgoTestConstants extends ScorexLogging {
 
   implicit val settings: ErgoSettings = initSettings
 
-  val popowAlgos = new PoPowAlgos(powScheme)
+  val popowAlgos = new NipopowAlgos(powScheme)
 
   val lightModeSettings: ErgoSettings = initSettings.copy(
     nodeSettings = initSettings.nodeSettings.copy(stateType = StateType.Digest)

@@ -4,7 +4,8 @@ import java.io.File
 
 import org.ergoplatform.ErgoBoxCandidate
 import org.ergoplatform.modifiers.ErgoFullBlock
-import org.ergoplatform.modifiers.history.{ADProofs, BlockTransactions, Header, PoPowAlgos}
+import org.ergoplatform.modifiers.history.popow.NipopowAlgos
+import org.ergoplatform.modifiers.history.{ADProofs, BlockTransactions, Header}
 import org.ergoplatform.modifiers.mempool.ErgoTransaction
 import org.ergoplatform.nodeView.history.ErgoHistory
 import org.ergoplatform.nodeView.state.StateType.Utxo
@@ -144,7 +145,7 @@ class ErgoNodeViewHolderSpec extends ErgoPropertyTest with NodeViewTestOps with 
     */
   private def generateInvalidFullBlock(parentBlockOpt: Option[ErgoFullBlock], parentState: WrappedUtxoState) = {
     val validInterlinks = popowAlgos.updateInterlinks(parentBlockOpt.map(_.header), parentBlockOpt.map(_.extension))
-    val extensionIn = PoPowAlgos.interlinksToExtension(validInterlinks).toExtension(modifierIdGen.sample.get)
+    val extensionIn = popowAlgos.interlinksToExtension(validInterlinks).toExtension(modifierIdGen.sample.get)
     val brokenBlockIn = validFullBlock(parentBlockOpt, parentState)
     val headTx = brokenBlockIn.blockTransactions.txs.head
     val wrongBoxId: ADKey = ADKey !@@ Algos.hash("wrong input")

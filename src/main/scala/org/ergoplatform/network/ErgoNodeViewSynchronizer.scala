@@ -1,6 +1,7 @@
 package org.ergoplatform.network
 
 import akka.actor.{ActorRef, ActorRefFactory, Props}
+import org.ergoplatform.modifiers.history.Header
 import org.ergoplatform.modifiers.mempool.ErgoTransaction
 import org.ergoplatform.modifiers.{ErgoFullBlock, ErgoPersistentModifier}
 import org.ergoplatform.network.ErgoNodeViewSynchronizer.CheckModifiersToDownload
@@ -9,12 +10,13 @@ import org.ergoplatform.nodeView.mempool.ErgoMemPool
 import org.ergoplatform.settings.{Constants, ErgoSettings}
 import scorex.core.NodeViewHolder.ReceivableMessages.{ModifiersFromRemote, TransactionsFromRemote}
 import scorex.core.NodeViewHolder._
+import scorex.core.consensus.History.{HistoryComparisonResult, Older}
 import scorex.core.network.ModifiersStatus.Requested
 import scorex.core.{ModifierTypeId, NodeViewModifier, PersistentNodeViewModifier}
 import scorex.core.network.NetworkController.ReceivableMessages.SendToNetwork
 import scorex.core.network.NodeViewSynchronizer.ReceivableMessages.SemanticallySuccessfulModifier
 import scorex.core.network.message.{InvData, Message, ModifiersData}
-import scorex.core.network.{ConnectedPeer, ModifiersStatus, NodeViewSynchronizer, SendToRandom}
+import scorex.core.network.{ConnectedPeer, ModifiersStatus, NodeViewSynchronizer, SendToPeer, SendToRandom}
 import scorex.core.serialization.ScorexSerializer
 import scorex.core.settings.NetworkSettings
 import scorex.core.transaction.Transaction
@@ -108,9 +110,36 @@ class ErgoNodeViewSynchronizer(networkControllerRef: ActorRef,
         // parse all modifiers and put them to modifiers cache
         val parsed: Iterable[ErgoPersistentModifier] = parseModifiers(requestedModifiers, serializer, remote)
         val valid = parsed.filter(validateAndSetStatus(remote, _))
-        if (valid.nonEmpty) viewHolderRef ! ModifiersFromRemote[ErgoPersistentModifier](valid)
+        if (valid.nonEmpty) {
+          viewHolderRef ! ModifiersFromRemote[ErgoPersistentModifier](valid)
+          if(valid.head.modifierTypeId == Header.modifierTypeId){
+            val h = valid.head.asInstanceOf[Header].height
+            historyReaderOpt.foreach { hr =>
+              if(hr.fullBlockHeight < h){
+                statusTracker.updateStatus(remote, Older)
+                sendSync(statusTracker, hr)
+              }
+            }
+          }
+        }
       case _ =>
         log.error(s"Undefined serializer for modifier of type $typeId")
+    }
+  }
+
+  // Send history extension to the (less developed) peer 'remote' which does not have it.
+  override def sendExtension(remote: ConnectedPeer,
+                    status: HistoryComparisonResult,
+                    ext: Seq[(ModifierTypeId, ModifierId)]): Unit = {
+    ext.groupBy(_._1).mapValues(_.map(_._2)).foreach {
+      case (mid, modsUnchecked) =>
+        val mods = if(modsUnchecked.length > 400) {
+          log.error("Extension has length more than 400")
+          modsUnchecked.take(400)
+        } else {
+          modsUnchecked
+        }
+        networkControllerRef ! SendToNetwork(Message(invSpec, Right(InvData(mid, mods)), None), SendToPeer(remote))
     }
   }
 
@@ -153,10 +182,15 @@ class ErgoNodeViewSynchronizer(networkControllerRef: ActorRef,
       deliveryTracker.status(id) == Requested
     }
 
+    // todo: consider rules for penalizing peers for spammy transactions
     if (spam.nonEmpty) {
-      log.info(s"Spam attempt: peer $remote has sent a non-requested modifiers of type $typeId with ids" +
-        s": ${spam.keys.map(encoder.encodeId)}")
-      penalizeSpammingPeer(remote)
+      if(typeId == Transaction.ModifierTypeId) {
+        log.info(s"Got spammy transactions: $modifiers")
+      } else {
+        log.info(s"Spam attempt: peer $remote has sent a non-requested modifiers of type $typeId with ids" +
+          s": ${spam.keys.map(encoder.encodeId)}")
+        penalizeSpammingPeer(remote)
+      }
     }
     requested
   }

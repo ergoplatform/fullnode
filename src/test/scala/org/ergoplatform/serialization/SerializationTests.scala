@@ -2,10 +2,11 @@ package org.ergoplatform.serialization
 
 import org.ergoplatform.modifiers.ErgoNodeViewModifier
 import org.ergoplatform.modifiers.history._
+import org.ergoplatform.modifiers.history.popow.NipopowProofSerializer
 import org.ergoplatform.modifiers.mempool.ErgoTransactionSerializer
 import org.ergoplatform.nodeView.history.ErgoSyncInfoSerializer
-import org.ergoplatform.nodeView.state.ErgoStateContextSerializer
 import org.ergoplatform.nodeView.wallet.persistence.WalletDigestSerializer
+import org.ergoplatform.nodeView.state.ErgoStateContextSerializer
 import org.ergoplatform.settings.{Constants, ErgoValidationSettings, ErgoValidationSettingsSerializer, ErgoValidationSettingsUpdateSerializer}
 import org.ergoplatform.utils.ErgoPropertyTest
 import org.ergoplatform.utils.generators.WalletGenerators
@@ -29,6 +30,10 @@ class SerializationTests extends ErgoPropertyTest with WalletGenerators with sco
     block.toSeq.foreach { s =>
       Constants.modifierSerializers.get(s.modifierTypeId) should not be None
     }
+  }
+
+  property("PoPowProof serialization") {
+    checkSerializationRoundtrip(poPowProofGen, new NipopowProofSerializer(popowAlgos))
   }
 
   property("Header serialization") {

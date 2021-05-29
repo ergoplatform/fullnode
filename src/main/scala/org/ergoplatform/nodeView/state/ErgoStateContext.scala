@@ -3,6 +3,7 @@ package org.ergoplatform.nodeView.state
 import org.ergoplatform.ErgoLikeContext.Height
 import org.ergoplatform.modifiers.ErgoFullBlock
 import org.ergoplatform.modifiers.history._
+import org.ergoplatform.modifiers.history.popow.NipopowAlgos
 import org.ergoplatform.nodeView.history.ErgoHistory
 import org.ergoplatform.nodeView.history.storage.modifierprocessors.ExtensionValidator
 import org.ergoplatform.settings.ValidationRules._
@@ -68,7 +69,7 @@ class ErgoStateContext(val lastHeaders: Seq[Header],
 
   private val votingSettings = ergoSettings.chainSettings.voting
   private val powScheme = ergoSettings.chainSettings.powScheme
-  private val popowAlgos = new PoPowAlgos(powScheme)
+  private val popowAlgos = new NipopowAlgos(powScheme)
 
   override def sigmaPreHeader: special.sigma.PreHeader =
     PreHeader.toSigma(lastHeaders.headOption.getOrElse(PreHeader.fake))

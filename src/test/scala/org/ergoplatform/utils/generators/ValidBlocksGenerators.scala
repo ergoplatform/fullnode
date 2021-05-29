@@ -4,8 +4,9 @@ import akka.actor.ActorRef
 import org.ergoplatform.ErgoBox
 import org.ergoplatform.mining.ErgoMiner
 import org.ergoplatform.modifiers.ErgoFullBlock
-import org.ergoplatform.modifiers.history.PoPowAlgos._
-import org.ergoplatform.modifiers.history.{ExtensionCandidate, PoPowAlgos, Header, Extension}
+import org.ergoplatform.modifiers.history.popow.NipopowAlgos
+import org.ergoplatform.modifiers.history.{Extension, ExtensionCandidate, Header}
+import org.ergoplatform.modifiers.history.{ExtensionCandidate, Header, Extension}
 import org.ergoplatform.modifiers.mempool.ErgoTransaction
 import org.ergoplatform.nodeView.state._
 import org.ergoplatform.nodeView.state.wrapped.WrappedUtxoState
@@ -203,10 +204,12 @@ trait ValidBlocksGenerators
 
     val time = timeOpt.orElse(parentOpt.map(_.header.timestamp + 1)).getOrElse(timeProvider.time())
     val interlinks = parentOpt.toSeq.flatMap { block =>
-      popowAlgos.updateInterlinks(block.header, PoPowAlgos.unpackInterlinks(block.extension.fields).get)
+      popowAlgos.updateInterlinks(block.header, NipopowAlgos.unpackInterlinks(block.extension.fields).get)
     }
-    val extension: ExtensionCandidate = LaunchParameters.toExtensionCandidate ++ interlinksToExtension(interlinks) ++
-      utxoState.stateContext.validationSettings.toExtensionCandidate
+    val extension: ExtensionCandidate =
+      LaunchParameters.toExtensionCandidate ++
+        popowAlgos.interlinksToExtension(interlinks) ++
+        utxoState.stateContext.validationSettings.toExtensionCandidate
     val votes = Array.fill(3)(0: Byte)
 
     powScheme.proveBlock(parentOpt.map(_.header), Header.InitialVersion, settings.chainSettings.initialNBits, updStateDigest, adProofBytes,
@@ -229,7 +232,7 @@ trait ValidBlocksGenerators
     val (adProofBytes, updStateDigest) = wrappedState.proofsForTransactions(transactions).get
 
     val time = timeOpt.orElse(parentOpt.map(_.timestamp + 1)).getOrElse(timeProvider.time())
-    val interlinksExtension = interlinksToExtension(popowAlgos.updateInterlinks(parentOpt, parentExtensionOpt))
+    val interlinksExtension = popowAlgos.interlinksToExtension(popowAlgos.updateInterlinks(parentOpt, parentExtensionOpt))
     val extension: ExtensionCandidate = LaunchParameters.toExtensionCandidate ++ interlinksExtension
     val votes = Array.fill(3)(0: Byte)
 

@@ -82,7 +82,7 @@ To run specific Ergo version `<VERSION>` as a service with custom config `/path/
         -e MAX_HEAP=3G \
         ergoplatform/ergo:<VERSION> --<networkId> -c /etc/myergo.conf
 
-Available versions can be found on [Ergo Docker image page](https://hub.docker.com/r/ergoplatform/ergo/tags), for example, `v4.0.11`.
+Available versions can be found on [Ergo Docker image page](https://hub.docker.com/r/ergoplatform/ergo/tags), for example, `v4.0.12`.
 
 This will connect to the Ergo mainnet or testnet following your configuration passed in `myergo.conf` and network flag `--<networkId>`. Every default config value would be overwritten with corresponding value in `myergo.conf`. `MAX_HEAP` variable can be used to control how much memory can the node consume.
 

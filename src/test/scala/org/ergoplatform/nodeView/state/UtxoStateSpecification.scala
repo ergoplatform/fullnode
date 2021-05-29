@@ -6,7 +6,6 @@ import org.ergoplatform.ErgoBox.{BoxId, R4}
 import org.ergoplatform._
 import org.ergoplatform.mining._
 import org.ergoplatform.modifiers.ErgoFullBlock
-import org.ergoplatform.modifiers.history.PoPowAlgos._
 import org.ergoplatform.modifiers.history.{ADProofs, BlockTransactions, Extension, Header}
 import org.ergoplatform.modifiers.mempool.{ErgoTransaction, UnsignedErgoTransaction}
 import org.ergoplatform.nodeView.history.ErgoHistory
@@ -462,9 +461,8 @@ class UtxoStateSpecification extends ErgoPropertyTest with ErgoTransactionGenera
     }
   }
 
-
   private def genExtension(header: Header, sc: ErgoStateContext): Extension = {
-    interlinksToExtension(popowAlgos.updateInterlinks(sc.lastHeaderOpt, sc.lastExtensionOpt)).toExtension(header.id)
+    popowAlgos.interlinksToExtension(popowAlgos.updateInterlinks(sc.lastHeaderOpt, sc.lastExtensionOpt)).toExtension(header.id)
   }
 
 }

@@ -8,6 +8,7 @@ import org.ergoplatform.http.api.ApiEncoderOption.HideDetails.implicitValue
 import org.ergoplatform.http.api.ApiEncoderOption.{Detalization, ShowDetails}
 import org.ergoplatform.http.api.ApiCodecs
 import org.ergoplatform.modifiers.ErgoFullBlock
+import org.ergoplatform.modifiers.history.popow.NipopowProof
 import org.ergoplatform.modifiers.mempool.UnsignedErgoTransaction
 import org.ergoplatform.nodeView.wallet.requests._
 import org.ergoplatform.settings.{Algos, ErgoSettings}
@@ -126,6 +127,15 @@ class JsonSerializationSpec extends ErgoPropertyTest with WalletGenerators with 
       val json = tx.asJson
       val parsedTx = json.as[UnsignedErgoTransaction].toOption.get
       parsedTx shouldBe tx
+    }
+  }
+
+  property("PopowProof roundtrip"){
+    forAll(poPowProofGen){ pp =>
+      val json = pp.asJson
+      implicit val decoder = NipopowProof.nipopowProofDecoder(popowAlgos)
+      val parsedProof = json.as[NipopowProof].toOption.get
+      parsedProof shouldBe pp
     }
   }
 

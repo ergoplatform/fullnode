@@ -1,7 +1,8 @@
 package org.ergoplatform.nodeView.state
 
 import org.ergoplatform.modifiers.ErgoFullBlock
-import org.ergoplatform.modifiers.history.{Extension, PoPowAlgos}
+import org.ergoplatform.modifiers.history.Extension
+import org.ergoplatform.modifiers.history.popow.NipopowAlgos
 import org.ergoplatform.settings.Parameters._
 import org.ergoplatform.utils.HistoryTestHelpers
 
@@ -67,8 +68,8 @@ class ErgoStateContextSpec extends HistoryTestHelpers {
     sc.appendFullBlock(fbWithFields(imvValue +: oldFields)) shouldBe 'failure
 
     // validation of incorrect interlinks
-    val invalidInterlinks = PoPowAlgos.interlinksToExtension(
-      PoPowAlgos.unpackInterlinks(fb.extension.fields).get ++ Seq(fb.header.id)
+    val invalidInterlinks = popowAlgos.interlinksToExtension(
+      NipopowAlgos.unpackInterlinks(fb.extension.fields).get ++ Seq(fb.header.id)
     ).fields
     sc.appendFullBlock(fbWithFields(invalidInterlinks ++ oldFields)) shouldBe 'failure
 

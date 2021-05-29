@@ -58,7 +58,7 @@ trait ErgoHistory
           (this, process(header))
         case section: BlockSection =>
           (this, process(section))
-        case poPoWProof: PoPoWProof =>
+        case poPoWProof: NipopowProofModifier =>
           (this, process(poPoWProof))
         case chunk: UTXOSnapshotChunk =>
           (this, process(chunk))
