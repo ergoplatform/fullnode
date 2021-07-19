@@ -12,7 +12,7 @@ import org.asynchttpclient.Dsl.{get => _get, post => _post}
 import org.asynchttpclient._
 import org.asynchttpclient.util.HttpConstants
 import org.ergoplatform.it.util._
-import org.ergoplatform.modifiers.history.Header
+import org.ergoplatform.modifiers.history.header.Header
 import org.slf4j.{Logger, LoggerFactory}
 import scorex.util.ScorexLogging
 

@@ -49,13 +49,4 @@ object StateType {
 
   implicit final object DigestEvidence extends Evidence[DigestType, DigestState]
 
-  def forState[T <: ErgoState[T]](implicit tag: ClassTag[T]): StateType = {
-    if (classOf[DigestState].isAssignableFrom(tag.runtimeClass)) Digest else Utxo
-  }
-
-  /** This is for json representation of [[StateType]] instances
-    */
-  implicit val jsonEncoder: Encoder[StateType] =
-    Encoder.encodeString.contramap[StateType](_.stateTypeName)
-
 }

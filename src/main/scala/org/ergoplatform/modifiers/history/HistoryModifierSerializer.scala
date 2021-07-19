@@ -1,6 +1,8 @@
 package org.ergoplatform.modifiers.history
 
 import org.ergoplatform.modifiers.ErgoPersistentModifier
+import org.ergoplatform.modifiers.history.extension.{Extension, ExtensionSerializer}
+import org.ergoplatform.modifiers.history.header.{Header, HeaderSerializer}
 import scorex.core.serialization.ScorexSerializer
 import scorex.util.serialization.{Reader, Writer}
 
@@ -13,7 +15,7 @@ object HistoryModifierSerializer extends ScorexSerializer[ErgoPersistentModifier
         HeaderSerializer.serialize(m, w)
       case m: ADProofs =>
         w.put(ADProofs.modifierTypeId)
-        ADProofSerializer.serialize(m, w)
+        ADProofsSerializer.serialize(m, w)
       case m: BlockTransactions =>
         w.put(BlockTransactions.modifierTypeId)
         BlockTransactionsSerializer.serialize(m, w)
@@ -30,7 +32,7 @@ object HistoryModifierSerializer extends ScorexSerializer[ErgoPersistentModifier
       case Header.`modifierTypeId` =>
         HeaderSerializer.parse(r)
       case ADProofs.`modifierTypeId` =>
-        ADProofSerializer.parse(r)
+        ADProofsSerializer.parse(r)
       case BlockTransactions.`modifierTypeId` =>
         BlockTransactionsSerializer.parse(r)
       case Extension.`modifierTypeId` =>

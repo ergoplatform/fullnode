@@ -4,7 +4,7 @@ import akka.util.Timeout
 import org.ergoplatform.mining.difficulty.LinearDifficultyControl
 import org.ergoplatform.mining.emission.EmissionRules
 import org.ergoplatform.mining.{AutolykosPowScheme, DefaultFakePowScheme}
-import org.ergoplatform.modifiers.history.ExtensionCandidate
+import org.ergoplatform.modifiers.history.extension.ExtensionCandidate
 import org.ergoplatform.modifiers.history.popow.NipopowAlgos
 import org.ergoplatform.nodeView.state.{ErgoState, ErgoStateContext, StateConstants, StateType, UpcomingStateContext}
 import org.ergoplatform.settings.Constants.HashLength

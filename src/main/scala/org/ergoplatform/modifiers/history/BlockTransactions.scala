@@ -4,6 +4,7 @@ import io.circe.syntax._
 import io.circe.{Decoder, Encoder, HCursor}
 import org.ergoplatform.http.api.ApiCodecs
 import org.ergoplatform.modifiers.BlockSection
+import org.ergoplatform.modifiers.history.header.Header
 import org.ergoplatform.modifiers.mempool.{ErgoTransaction, ErgoTransactionSerializer}
 import org.ergoplatform.nodeView.mempool.TransactionMembershipProof
 import org.ergoplatform.settings.{Algos, Constants}

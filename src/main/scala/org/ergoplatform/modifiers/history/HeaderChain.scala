@@ -1,5 +1,7 @@
 package org.ergoplatform.modifiers.history
 
+import org.ergoplatform.modifiers.history.header.Header
+
 case class HeaderChain(headers: IndexedSeq[Header]) {
 
   headers.indices.foreach { i =>

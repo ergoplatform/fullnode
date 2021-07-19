@@ -2,6 +2,8 @@ package org.ergoplatform.nodeView.history
 
 import org.ergoplatform.modifiers.BlockSection
 import org.ergoplatform.modifiers.history._
+import org.ergoplatform.modifiers.history.extension.Extension
+import org.ergoplatform.modifiers.history.header.Header
 import org.ergoplatform.nodeView.state.StateType
 import org.ergoplatform.utils.HistoryTestHelpers
 import scorex.core.block.Block.Version

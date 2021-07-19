@@ -1,7 +1,8 @@
 package org.ergoplatform.nodeView.history.storage.modifierprocessors
 
+import org.ergoplatform.modifiers.history.extension.{Extension, ExtensionCandidate}
+import org.ergoplatform.modifiers.history.header.Header
 import org.ergoplatform.modifiers.history.popow.NipopowAlgos
-import org.ergoplatform.modifiers.history.{Extension, ExtensionCandidate, Header}
 import org.ergoplatform.settings.ValidationRules._
 import scorex.core.utils.ScorexEncoding
 import scorex.core.validation.ValidationState

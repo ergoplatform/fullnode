@@ -1,7 +1,7 @@
 package org.ergoplatform.network
 
 import akka.actor.{ActorRef, ActorRefFactory, Props}
-import org.ergoplatform.modifiers.history.Header
+import org.ergoplatform.modifiers.history.header.Header
 import org.ergoplatform.modifiers.mempool.ErgoTransaction
 import org.ergoplatform.modifiers.{ErgoFullBlock, ErgoPersistentModifier}
 import org.ergoplatform.network.ErgoNodeViewSynchronizer.{CheckModifiersToDownload, PeerSyncState}

@@ -1,7 +1,7 @@
 package org.ergoplatform.modifiers.state
 
 import org.ergoplatform.modifiers.ErgoPersistentModifier
-import org.ergoplatform.modifiers.history.Header
+import org.ergoplatform.modifiers.history.header.Header
 import org.ergoplatform.settings.Algos
 import scorex.core.ModifierTypeId
 import scorex.core.serialization.ScorexSerializer

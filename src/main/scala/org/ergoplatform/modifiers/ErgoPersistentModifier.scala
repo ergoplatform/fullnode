@@ -1,7 +1,9 @@
 package org.ergoplatform.modifiers
 
 import io.circe.Encoder
-import org.ergoplatform.modifiers.history.{ADProofs, BlockTransactions, Extension, Header}
+import org.ergoplatform.modifiers.history.extension.Extension
+import org.ergoplatform.modifiers.history.header.Header
+import org.ergoplatform.modifiers.history.{ADProofs, BlockTransactions}
 import scorex.core.PersistentNodeViewModifier
 
 trait ErgoPersistentModifier extends PersistentNodeViewModifier with ErgoNodeViewModifier

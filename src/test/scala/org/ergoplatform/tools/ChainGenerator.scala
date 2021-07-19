@@ -6,8 +6,9 @@ import org.ergoplatform._
 import org.ergoplatform.mining.difficulty.RequiredDifficulty
 import org.ergoplatform.mining.{AutolykosPowScheme, CandidateBlock, ErgoMiner}
 import org.ergoplatform.modifiers.ErgoFullBlock
+import org.ergoplatform.modifiers.history.extension.{Extension, ExtensionCandidate}
+import org.ergoplatform.modifiers.history.header.Header
 import org.ergoplatform.modifiers.history.popow.NipopowAlgos
-import org.ergoplatform.modifiers.history.{Extension, ExtensionCandidate, Header}
 import org.ergoplatform.modifiers.mempool.{ErgoTransaction, UnsignedErgoTransaction}
 import org.ergoplatform.nodeView.history.ErgoHistory
 import org.ergoplatform.nodeView.history.ErgoHistory.Height

@@ -1,7 +1,9 @@
 package org.ergoplatform.nodeView.history
 
 import org.ergoplatform.modifiers.history._
-import org.ergoplatform.modifiers.history.popow.{NipopowAlgos, PoPowHeader, PoPowParams, NipopowProof}
+import org.ergoplatform.modifiers.history.extension.Extension
+import org.ergoplatform.modifiers.history.header.{Header, PreGenesisHeader}
+import org.ergoplatform.modifiers.history.popow.{NipopowAlgos, NipopowProof, PoPowHeader, PoPowParams}
 import org.ergoplatform.modifiers.state.UTXOSnapshotChunk
 import org.ergoplatform.modifiers.{BlockSection, ErgoFullBlock, ErgoPersistentModifier}
 import org.ergoplatform.nodeView.history.ErgoHistory.Height

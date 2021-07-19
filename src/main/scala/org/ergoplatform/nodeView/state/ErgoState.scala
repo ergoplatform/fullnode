@@ -7,7 +7,7 @@ import org.ergoplatform._
 import org.ergoplatform.mining.emission.EmissionRules
 import org.ergoplatform.mining.groupElemFromBytes
 import org.ergoplatform.modifiers.ErgoPersistentModifier
-import org.ergoplatform.modifiers.history.Header
+import org.ergoplatform.modifiers.history.header.Header
 import org.ergoplatform.modifiers.mempool.ErgoTransaction
 import org.ergoplatform.modifiers.state.{Insertion, Lookup, Removal, StateChanges}
 import org.ergoplatform.nodeView.history.ErgoHistory

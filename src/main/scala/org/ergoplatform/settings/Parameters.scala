@@ -3,16 +3,16 @@ package org.ergoplatform.settings
 import com.google.common.primitives.Ints
 import io.circe.Encoder
 import io.circe.syntax._
-import org.ergoplatform.modifiers.history.{Extension, ExtensionCandidate}
 import org.ergoplatform.nodeView.history.ErgoHistory.Height
 import scorex.core.serialization.ScorexSerializer
 import scorex.util.serialization.{Reader, Writer}
 import scorex.util.Extensions._
 
 import scala.util.Try
-import Extension.SystemParametersPrefix
 import org.ergoplatform.http.api.ApiCodecs
+import org.ergoplatform.modifiers.history.extension.{Extension, ExtensionCandidate}
 import org.ergoplatform.wallet.protocol.context.ErgoLikeParameters
+import Extension.SystemParametersPrefix
 
 /**
   * System parameters which could be readjusted via collective miners decision.

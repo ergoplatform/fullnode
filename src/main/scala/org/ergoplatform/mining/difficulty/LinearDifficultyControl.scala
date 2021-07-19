@@ -1,6 +1,6 @@
 package org.ergoplatform.mining.difficulty
 
-import org.ergoplatform.modifiers.history.Header
+import org.ergoplatform.modifiers.history.header.Header
 import org.ergoplatform.nodeView.history.ErgoHistory.{Difficulty, Height}
 import org.ergoplatform.settings.ChainSettings
 import scorex.util.ScorexLogging

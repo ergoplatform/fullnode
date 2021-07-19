@@ -1,6 +1,6 @@
 package org.ergoplatform.mining
 
-import org.ergoplatform.modifiers.history.Header
+import org.ergoplatform.modifiers.history.header.Header
 import scorex.core.block.Block
 import scorex.core.block.Block.Timestamp
 import scorex.crypto.authds.ADDigest

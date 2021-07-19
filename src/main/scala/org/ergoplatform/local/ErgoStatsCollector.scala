@@ -7,7 +7,7 @@ import org.ergoplatform.Version
 import org.ergoplatform.http.api.ApiCodecs
 import org.ergoplatform.local.ErgoStatsCollector.{GetNodeInfo, NodeInfo}
 import org.ergoplatform.modifiers.ErgoFullBlock
-import org.ergoplatform.modifiers.history.Header
+import org.ergoplatform.modifiers.history.header.Header
 import org.ergoplatform.nodeView.ErgoReadersHolder.{GetReaders, Readers}
 import org.ergoplatform.nodeView.history.ErgoHistory
 import org.ergoplatform.nodeView.state.{ErgoStateReader, StateType}

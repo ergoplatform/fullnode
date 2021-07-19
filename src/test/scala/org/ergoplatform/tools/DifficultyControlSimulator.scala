@@ -1,7 +1,7 @@
 package org.ergoplatform.tools
 
 import org.ergoplatform.mining.difficulty.{LinearDifficultyControl, RequiredDifficulty}
-import org.ergoplatform.modifiers.history.Header
+import org.ergoplatform.modifiers.history.header.Header
 import org.ergoplatform.nodeView.history.ErgoHistory.Difficulty
 import org.ergoplatform.settings.ErgoSettings
 import org.ergoplatform.utils.generators.ErgoGenerators

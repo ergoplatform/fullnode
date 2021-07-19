@@ -2,7 +2,7 @@ package org.ergoplatform.utils.generators
 
 import org.ergoplatform.ErgoBox.TokenId
 import org.ergoplatform.modifiers.ErgoFullBlock
-import org.ergoplatform.modifiers.history.{BlockTransactions, Header}
+import org.ergoplatform.modifiers.history.BlockTransactions
 import org.ergoplatform.modifiers.mempool.{ErgoTransaction, UnsignedErgoTransaction}
 import org.ergoplatform.modifiers.state.UTXOSnapshotChunk
 import org.ergoplatform.nodeView.history.ErgoHistory
@@ -16,6 +16,7 @@ import org.ergoplatform.utils.BoxUtils
 import org.ergoplatform.wallet.Constants.ScanId
 import org.ergoplatform.wallet.secrets.{DhtSecretKey, DlogSecretKey}
 import org.ergoplatform.UnsignedInput
+import org.ergoplatform.modifiers.history.header.Header
 import org.ergoplatform.wallet.interpreter.TransactionHintsBag
 import org.ergoplatform.wallet.utils.Generators
 import org.ergoplatform.{DataInput, ErgoAddress, ErgoAddressEncoder, ErgoBox, ErgoBoxCandidate, Input, P2PKAddress}

@@ -4,7 +4,7 @@ import java.nio.ByteBuffer
 
 import org.ergoplatform.mining.difficulty.RequiredDifficulty
 import org.ergoplatform.mining.{AutolykosSolution, groupElemFromBytes}
-import org.ergoplatform.modifiers.history.Header
+import org.ergoplatform.modifiers.history.header.Header
 import org.ergoplatform.settings.Algos
 import org.ergoplatform.utils.ErgoPropertyTest
 import scorex.crypto.authds.ADDigest

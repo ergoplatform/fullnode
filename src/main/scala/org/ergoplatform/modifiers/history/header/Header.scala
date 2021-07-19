@@ -1,58 +1,29 @@
-package org.ergoplatform.modifiers.history
+package org.ergoplatform.modifiers.history.header
 
 import io.circe.syntax._
 import io.circe.{Decoder, Encoder, HCursor}
 import org.ergoplatform.http.api.ApiCodecs
 import org.ergoplatform.mining.difficulty.RequiredDifficulty
-import org.ergoplatform.mining.{AutolykosSolution, AutolykosSolutionSerializer}
+import org.ergoplatform.mining.AutolykosSolution
+import org.ergoplatform.modifiers.history.extension.Extension
+import org.ergoplatform.modifiers.history.{ADProofs, BlockTransactions, PreHeader}
 import org.ergoplatform.modifiers.{BlockSection, ErgoPersistentModifier}
 import org.ergoplatform.nodeView.history.ErgoHistory
 import org.ergoplatform.nodeView.history.ErgoHistory.Difficulty
 import org.ergoplatform.settings.{Algos, Constants}
 import org.ergoplatform.wallet.interpreter.ErgoInterpreter
-import scorex.core.{ModifierTypeId, idToBytes}
 import scorex.core.block.Block._
 import scorex.core.serialization.ScorexSerializer
 import scorex.core.utils.NetworkTimeProvider
+import scorex.core.ModifierTypeId
 import scorex.crypto.authds.ADDigest
 import scorex.crypto.hash.Digest32
 import scorex.util._
+import sigmastate.eval.Extensions._
+import sigmastate.eval.{CAvlTree, CBigInt, CGroupElement, CHeader}
 import sigmastate.interpreter.CryptoConstants.EcPointType
-import scorex.util.serialization.{Reader, VLQByteBufferWriter, Writer}
 
 import scala.concurrent.duration.FiniteDuration
-import scorex.util.Extensions._
-import sigmastate.eval.{CAvlTree, CBigInt, CGroupElement, CHeader}
-import sigmastate.eval.Extensions._
-
-/**
-  * Header without proof-of-work puzzle solution, see Header class description for details.
-  */
-class HeaderWithoutPow(val version: Version, // 1 byte
-                       val parentId: ModifierId, // 32 bytes
-                       val ADProofsRoot: Digest32, // 32 bytes
-                       val stateRoot: ADDigest, //33 bytes! extra byte with tree height here!
-                       val transactionsRoot: Digest32, // 32 bytes
-                       val timestamp: Timestamp,
-                       val nBits: Long, //actually it is unsigned int
-                       val height: Int,
-                       val extensionRoot: Digest32,
-                       val votes: Array[Byte]) { //3 bytes
-  def toHeader(powSolution: AutolykosSolution, headerSize: Option[Int] = None): Header =
-    Header(version, parentId, ADProofsRoot, stateRoot, transactionsRoot, timestamp,
-      nBits, height, extensionRoot, powSolution, votes, headerSize)
-}
-
-object HeaderWithoutPow {
-
-  def apply(version: Version, parentId: ModifierId, ADProofsRoot: Digest32, stateRoot: ADDigest,
-            transactionsRoot: Digest32, timestamp: Timestamp, nBits: Long, height: Int,
-            extensionRoot: Digest32, votes: Array[Byte]): HeaderWithoutPow = {
-    new HeaderWithoutPow(version, parentId, ADProofsRoot, stateRoot, transactionsRoot, timestamp,
-      nBits, height, extensionRoot, votes)
-  }
-
-}
 
 /**
   * Header of a block. It authenticates link to a previous block, other block sections
@@ -135,26 +106,7 @@ case class Header(override val version: Version,
 
 }
 
-/**
-  * A fake header that is used to fill the chain that starts from the beginning
-  */
-object PreGenesisHeader extends Header(
-  0.toByte,
-  parentId = Header.GenesisParentId,
-  ADProofsRoot = null,
-  stateRoot = null,
-  transactionsRoot = null,
-  timestamp = 0L,
-  nBits = 0L,
-  height = ErgoHistory.EmptyHistoryHeight,
-  extensionRoot = null,
-  powSolution = null,
-  votes = null,
-  sizeOpt = None) {
 
-  override def serializedId: Array[Byte] = idToBytes(Header.GenesisParentId)
-
-}
 
 object Header extends ApiCodecs {
 
@@ -220,71 +172,6 @@ object Header extends ApiCodecs {
       solutions <- c.downField("powSolutions").as[AutolykosSolution]
     } yield Header(version, parentId, adProofsRoot, stateRoot,
       transactionsRoot, timestamp, nBits, height, extensionHash, solutions, Algos.decode(votes).get)
-  }
-
-}
-
-object HeaderSerializer extends ScorexSerializer[Header] {
-
-  override def serialize(h: Header, w: Writer): Unit = {
-    serializeWithoutPow(h, w)
-    AutolykosSolutionSerializer.serialize(h.version, h.powSolution, w)
-  }
-
-  def serializeWithoutPow(h: HeaderWithoutPow, w: Writer): Unit = {
-    w.put(h.version)
-    w.putBytes(idToBytes(h.parentId))
-    w.putBytes(h.ADProofsRoot)
-    w.putBytes(h.transactionsRoot)
-    w.putBytes(h.stateRoot)
-    w.putULong(h.timestamp)
-    w.putBytes(h.extensionRoot)
-    RequiredDifficulty.serialize(h.nBits, w)
-    w.putUInt(h.height)
-    w.putBytes(h.votes)
-
-    // For block version >= 2, this new byte encodes length of possible new fields.
-    // Set to 0 for now, so no new fields.
-    if (h.version > Header.InitialVersion) {
-      w.putUByte(0: Byte)
-    }
-  }
-
-  def bytesWithoutPow(header: HeaderWithoutPow): Array[Byte] = {
-    val w = new VLQByteBufferWriter(new ByteArrayBuilder())
-    serializeWithoutPow(header, w)
-    w.result().toBytes
-  }
-
-  def parseWithoutPow(r: Reader): HeaderWithoutPow = {
-    val version = r.getByte()
-    val parentId = bytesToId(r.getBytes(32))
-    val ADProofsRoot = Digest32 @@ r.getBytes(32)
-    val transactionsRoot = Digest32 @@ r.getBytes(32)
-    val stateRoot = ADDigest @@ r.getBytes(33)
-    val timestamp = r.getULong()
-    val extensionHash = Digest32 @@ r.getBytes(32)
-    val nBits = RequiredDifficulty.parse(r)
-    val height = r.getUInt().toIntExact
-    val votes = r.getBytes(3)
-
-    // For block version >= 2, a new byte encodes length of possible new fields.
-    // If this byte > 0, we read new fields but do nothing, as semantics of the fields is not known.
-    if (version > Header.InitialVersion) {
-      val newFieldsSize = r.getUByte()
-      if (newFieldsSize > 0) {
-        r.getBytes(newFieldsSize)
-      }
-    }
-
-    HeaderWithoutPow(version, parentId, ADProofsRoot, stateRoot, transactionsRoot, timestamp,
-      nBits, height, extensionHash, votes)
-  }
-
-  override def parse(r: Reader): Header = {
-    val headerWithoutPow = parseWithoutPow(r)
-    val powSolution = AutolykosSolutionSerializer.parse(r, headerWithoutPow.version)
-    headerWithoutPow.toHeader(powSolution, Some(r.consumed))
   }
 
 }

@@ -3,7 +3,7 @@ package org.ergoplatform.network
 import java.nio.ByteBuffer
 
 import com.google.common.primitives.Ints
-import org.ergoplatform.modifiers.history.Header
+import org.ergoplatform.modifiers.history.header.Header
 import org.ergoplatform.utils.ErgoPropertyTest
 import scorex.core.network.message.{InvData, InvSpec, Message, MessageSerializer}
 import scorex.crypto.hash

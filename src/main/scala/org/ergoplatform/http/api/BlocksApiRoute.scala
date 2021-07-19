@@ -5,7 +5,8 @@ import akka.http.scaladsl.server.{Directive, Route}
 import akka.pattern.ask
 import io.circe.Json
 import io.circe.syntax._
-import org.ergoplatform.modifiers.history.{BlockTransactions, Header}
+import org.ergoplatform.modifiers.history.header.Header
+import org.ergoplatform.modifiers.history.BlockTransactions
 import org.ergoplatform.modifiers.{BlockSection, ErgoFullBlock, ErgoPersistentModifier}
 import org.ergoplatform.nodeView.ErgoReadersHolder.GetDataFromHistory
 import org.ergoplatform.nodeView.history.ErgoHistoryReader

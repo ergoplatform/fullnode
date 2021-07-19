@@ -1,7 +1,7 @@
 package org.ergoplatform.local
 
+import org.ergoplatform.modifiers.history.header.Header
 import org.ergoplatform.modifiers.history.popow.{NipopowProof, PoPowParams}
-import org.ergoplatform.modifiers.history.Header
 import scorex.util.ModifierId
 
 /**

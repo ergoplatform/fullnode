@@ -228,10 +228,6 @@ object ErgoMemPool {
 
   }
 
-  type MemPoolRequest = Seq[ModifierId]
-
-  type MemPoolResponse = Seq[ErgoTransaction]
-
   /**
     * Create empty mempool
     * @param settings - node settings (to get mempool settings from)

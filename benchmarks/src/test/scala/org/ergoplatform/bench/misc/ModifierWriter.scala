@@ -6,6 +6,7 @@ import com.google.common.primitives.Ints
 import org.ergoplatform.Utils._
 import org.ergoplatform.modifiers.ErgoPersistentModifier
 import org.ergoplatform.modifiers.history._
+import org.ergoplatform.modifiers.history.header.{Header, HeaderSerializer}
 import scorex.core.serialization.ScorexSerializer
 import scorex.core.{ModifierTypeId, NodeViewModifier}
 
@@ -14,7 +15,7 @@ object ModifierWriter {
   val modifierSerializers: Map[ModifierTypeId, ScorexSerializer[_ <: ErgoPersistentModifier]] =
     Map(Header.modifierTypeId -> HeaderSerializer,
       BlockTransactions.modifierTypeId -> BlockTransactionsSerializer,
-      ADProofs.modifierTypeId -> ADProofSerializer)
+      ADProofs.modifierTypeId -> ADProofsSerializer)
 
   def write(mod: NodeViewModifier)(implicit fos: OutputStream): Unit = {
     val typeId = mod.modifierTypeId

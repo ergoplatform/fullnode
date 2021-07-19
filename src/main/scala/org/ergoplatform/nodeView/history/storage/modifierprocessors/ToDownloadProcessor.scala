@@ -1,6 +1,7 @@
 package org.ergoplatform.nodeView.history.storage.modifierprocessors
 
 import org.ergoplatform.modifiers.history._
+import org.ergoplatform.modifiers.history.header.Header
 import org.ergoplatform.settings.{ChainSettings, ErgoSettings, NodeConfigurationSettings}
 import scorex.core.ModifierTypeId
 import scorex.core.utils.NetworkTimeProvider

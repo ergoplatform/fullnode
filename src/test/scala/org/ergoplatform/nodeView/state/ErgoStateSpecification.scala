@@ -1,7 +1,8 @@
 package org.ergoplatform.nodeView.state
 
 import org.ergoplatform.modifiers.ErgoFullBlock
-import org.ergoplatform.modifiers.history.{BlockTransactions, Header}
+import org.ergoplatform.modifiers.history.BlockTransactions
+import org.ergoplatform.modifiers.history.header.Header
 import org.ergoplatform.settings.{Args, ErgoSettings}
 import org.ergoplatform.utils.ErgoPropertyTest
 import org.scalacheck.Gen

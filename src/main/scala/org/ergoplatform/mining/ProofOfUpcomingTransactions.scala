@@ -1,10 +1,11 @@
 package org.ergoplatform.mining
 
 import io.circe.{Encoder, Json}
-import org.ergoplatform.modifiers.history.{BlockTransactions, HeaderSerializer, HeaderWithoutPow}
+import org.ergoplatform.modifiers.history.BlockTransactions
 import org.ergoplatform.nodeView.mempool.TransactionMembershipProof
 import org.ergoplatform.settings.Algos
 import io.circe.syntax._
+import org.ergoplatform.modifiers.history.header.{HeaderSerializer, HeaderWithoutPow}
 
 /**
   * Proof of inclusion of certain transactions into a block with known and yet unproven header.

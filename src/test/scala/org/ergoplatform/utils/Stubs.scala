@@ -5,7 +5,6 @@ import akka.pattern.StatusReply
 import org.bouncycastle.util.BigIntegers
 import org.ergoplatform.mining.{AutolykosSolution, ErgoMiner, WorkMessage}
 import org.ergoplatform.modifiers.ErgoFullBlock
-import org.ergoplatform.modifiers.history.Header
 import org.ergoplatform.modifiers.mempool.ErgoTransaction
 import org.ergoplatform.nodeView.ErgoReadersHolder.{GetDataFromHistory, GetReaders, Readers}
 import org.ergoplatform.nodeView.history.ErgoHistory
@@ -24,6 +23,7 @@ import org.ergoplatform.wallet.boxes.{ChainStatus, TrackedBox}
 import org.ergoplatform.wallet.interpreter.ErgoProvingInterpreter
 import org.ergoplatform.wallet.secrets.{DerivationPath, ExtendedSecretKey}
 import org.ergoplatform.P2PKAddress
+import org.ergoplatform.modifiers.history.header.Header
 import org.ergoplatform.nodeView.wallet.ErgoWalletService.DeriveNextKeyResult
 import org.ergoplatform.nodeView.wallet.scanning.Scan
 import org.ergoplatform.wallet.mnemonic.Mnemonic

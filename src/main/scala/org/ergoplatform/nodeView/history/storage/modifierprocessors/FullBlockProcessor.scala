@@ -1,6 +1,7 @@
 package org.ergoplatform.nodeView.history.storage.modifierprocessors
 
 import org.ergoplatform.modifiers.history._
+import org.ergoplatform.modifiers.history.header.Header
 import org.ergoplatform.modifiers.{ErgoFullBlock, ErgoPersistentModifier}
 import org.ergoplatform.nodeView.history.ErgoHistory
 import org.ergoplatform.settings.Algos

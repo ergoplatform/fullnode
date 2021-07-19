@@ -5,6 +5,7 @@ import java.io.File
 import org.ergoplatform.ErgoLikeContext
 import org.ergoplatform.mining.AutolykosPowScheme
 import org.ergoplatform.modifiers.history._
+import org.ergoplatform.modifiers.history.header.{Header, PreGenesisHeader}
 import org.ergoplatform.modifiers.state.UTXOSnapshotChunk
 import org.ergoplatform.modifiers.{BlockSection, ErgoFullBlock, ErgoPersistentModifier}
 import org.ergoplatform.nodeView.history.storage.HistoryStorage

@@ -2,7 +2,8 @@ package org.ergoplatform.sanity
 
 import akka.actor.ActorRef
 import org.ergoplatform.ErgoBox
-import org.ergoplatform.modifiers.history.{BlockTransactions, Header}
+import org.ergoplatform.modifiers.history.header.Header
+import org.ergoplatform.modifiers.history.BlockTransactions
 import org.ergoplatform.modifiers.mempool.ErgoTransaction
 import org.ergoplatform.modifiers.{ErgoFullBlock, ErgoPersistentModifier}
 import org.ergoplatform.network.ErgoNodeViewSynchronizer

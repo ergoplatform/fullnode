@@ -3,7 +3,8 @@ package org.ergoplatform.utils
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
-import org.ergoplatform.modifiers.history.{Extension, ExtensionCandidate, Header}
+import org.ergoplatform.modifiers.history.extension.{Extension, ExtensionCandidate}
+import org.ergoplatform.modifiers.history.header.Header
 import org.ergoplatform.modifiers.mempool.ErgoTransaction
 import org.ergoplatform.modifiers.{ErgoFullBlock, ErgoPersistentModifier}
 import org.ergoplatform.nodeView.history.ErgoHistory

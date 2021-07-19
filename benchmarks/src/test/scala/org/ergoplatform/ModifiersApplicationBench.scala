@@ -2,7 +2,9 @@ package org.ergoplatform
 
 import org.ergoplatform.Utils.BenchReport
 import org.ergoplatform.modifiers.ErgoPersistentModifier
-import org.ergoplatform.modifiers.history.{BlockTransactions, Extension, Header}
+import org.ergoplatform.modifiers.history.extension.Extension
+import org.ergoplatform.modifiers.history.BlockTransactions
+import org.ergoplatform.modifiers.history.header.Header
 import org.ergoplatform.nodeView.{ErgoModifiersCache, NVBenchmark}
 import org.ergoplatform.nodeView.history.ErgoHistory
 import org.ergoplatform.nodeView.state.StateType

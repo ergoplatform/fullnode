@@ -1,7 +1,8 @@
 package org.ergoplatform.modifiers.history
 
-import org.ergoplatform.modifiers.history.popow.{NipopowAlgos, PoPowHeader, PoPowParams, NipopowProof}
+import org.ergoplatform.modifiers.history.popow.{NipopowAlgos, NipopowProof, PoPowHeader, PoPowParams}
 import org.ergoplatform.modifiers.ErgoFullBlock
+import org.ergoplatform.modifiers.history.extension.Extension
 import org.ergoplatform.nodeView.state.StateType
 import org.ergoplatform.utils.generators.ChainGenerator
 import org.scalacheck.Gen

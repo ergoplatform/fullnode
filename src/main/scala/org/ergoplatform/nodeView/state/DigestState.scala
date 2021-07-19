@@ -3,7 +3,8 @@ package org.ergoplatform.nodeView.state
 import java.io.File
 
 import org.ergoplatform.ErgoBox
-import org.ergoplatform.modifiers.history.{ADProofs, Header}
+import org.ergoplatform.modifiers.history.ADProofs
+import org.ergoplatform.modifiers.history.header.Header
 import org.ergoplatform.modifiers.mempool.ErgoTransaction
 import org.ergoplatform.modifiers.{ErgoFullBlock, ErgoPersistentModifier}
 import org.ergoplatform.nodeView.state.ErgoState.ModifierProcessing
@@ -32,12 +33,12 @@ class DigestState protected(override val version: VersionTag,
     with ScorexLogging
     with ScorexEncoding {
 
+  store.lastVersionID
+    .foreach(id => require(version == bytesToVersion(id), "version should always be equal to store.lastVersionID"))
+
   override val constants: StateConstants = StateConstants(None, ergoSettings)
 
   private lazy val nodeSettings = ergoSettings.nodeSettings
-
-  store.lastVersionID
-    .foreach(id => assert(version == bytesToVersion(id), "version should always be equal to store.lastVersionID"))
 
   override lazy val maxRollbackDepth: Int = store.rollbackVersions().size
 

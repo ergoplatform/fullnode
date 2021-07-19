@@ -1,11 +1,12 @@
 package org.ergoplatform.modifiers.history
 
+import org.ergoplatform.modifiers.history.extension.ExtensionCandidate
 import org.ergoplatform.utils.ErgoPropertyTest
 
 class ExtensionCandidateTest extends ErgoPropertyTest {
   type KV = (Array[Byte], Array[Byte])
 
-  property("proofFor should return a proof for an existing value") {
+  property("proofFor should return a valid proof for an existing value") {
     forAll { explodedFields: (Seq[KV], KV, Seq[KV]) =>
       val (left, middle, right) = explodedFields
       val fields = left ++ (middle +: right)

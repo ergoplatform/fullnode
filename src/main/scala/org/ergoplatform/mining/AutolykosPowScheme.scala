@@ -6,6 +6,8 @@ import org.ergoplatform.ErgoLikeContext.Height
 import org.ergoplatform.mining.difficulty.RequiredDifficulty
 import org.ergoplatform.modifiers.ErgoFullBlock
 import org.ergoplatform.modifiers.history._
+import org.ergoplatform.modifiers.history.extension.ExtensionCandidate
+import org.ergoplatform.modifiers.history.header.{Header, HeaderSerializer, HeaderWithoutPow}
 import org.ergoplatform.modifiers.mempool.ErgoTransaction
 import org.ergoplatform.nodeView.history.ErgoHistory
 import org.ergoplatform.nodeView.mempool.TransactionMembershipProof
@@ -36,8 +38,8 @@ import scala.util.Try
   */
 class AutolykosPowScheme(val k: Int, val n: Int) extends ScorexLogging {
 
-  assert(k <= 32, "k > 32 is not allowed due to genIndexes function")
-  assert(n < 31, "n >= 31 is not allowed")
+  require(k <= 32, "k > 32 is not allowed due to genIndexes function")
+  require(n < 31, "n >= 31 is not allowed")
 
   //Consensus-critical code below
 

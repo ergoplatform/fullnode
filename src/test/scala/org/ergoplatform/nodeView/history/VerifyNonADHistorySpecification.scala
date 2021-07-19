@@ -2,6 +2,8 @@ package org.ergoplatform.nodeView.history
 
 import org.ergoplatform.modifiers.ErgoFullBlock
 import org.ergoplatform.modifiers.history._
+import org.ergoplatform.modifiers.history.extension.Extension
+import org.ergoplatform.modifiers.history.header.HeaderSerializer
 import org.ergoplatform.nodeView.history.storage.modifierprocessors.{FullBlockProcessor, ToDownloadProcessor}
 import org.ergoplatform.nodeView.state.StateType
 import org.ergoplatform.settings.Algos

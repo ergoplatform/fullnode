@@ -2,6 +2,8 @@ package org.ergoplatform.settings
 
 import org.ergoplatform.mining.difficulty.RequiredDifficulty
 import org.ergoplatform.modifiers.history._
+import org.ergoplatform.modifiers.history.extension.{Extension, ExtensionSerializer}
+import org.ergoplatform.modifiers.history.header.{Header, HeaderSerializer}
 import org.ergoplatform.modifiers.mempool.ErgoTransactionSerializer
 import org.ergoplatform.nodeView.history.ErgoHistory.Difficulty
 import scorex.core.serialization.ScorexSerializer
@@ -46,7 +48,7 @@ object Constants {
     Map(Header.modifierTypeId -> HeaderSerializer,
       Extension.modifierTypeId -> ExtensionSerializer,
       BlockTransactions.modifierTypeId -> BlockTransactionsSerializer,
-      ADProofs.modifierTypeId -> ADProofSerializer,
+      ADProofs.modifierTypeId -> ADProofsSerializer,
       Transaction.ModifierTypeId -> ErgoTransactionSerializer)
 
   val SoftForkEpochs = 32 //about 45.5 days
@@ -59,7 +61,7 @@ object Constants {
   // Maximum extension size
   val MaxExtensionSize: Int = 32 * 1024
 
-  // Maximum extension size during bytes parsing. Allows to move MaxExtensionSize to Parameters in future
+  // Maximum extension size during bytes parsing
   val MaxExtensionSizeMax: Int = 1024 * 1024
 
 }

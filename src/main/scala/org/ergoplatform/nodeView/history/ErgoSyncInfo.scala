@@ -1,6 +1,6 @@
 package org.ergoplatform.nodeView.history
 
-import org.ergoplatform.modifiers.history.Header
+import org.ergoplatform.modifiers.history.header.Header
 import scorex.core.{ModifierTypeId, NodeViewModifier}
 import scorex.core.consensus.SyncInfo
 import scorex.core.network.message.SyncInfoMessageSpec

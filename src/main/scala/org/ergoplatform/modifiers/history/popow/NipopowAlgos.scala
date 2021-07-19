@@ -2,8 +2,9 @@ package org.ergoplatform.modifiers.history.popow
 
 import org.ergoplatform.mining.AutolykosPowScheme
 import org.ergoplatform.mining.difficulty.RequiredDifficulty
-import org.ergoplatform.modifiers.history.Extension.InterlinksVectorPrefix
-import org.ergoplatform.modifiers.history.{Extension, ExtensionCandidate, Header}
+import org.ergoplatform.modifiers.history.extension.{Extension, ExtensionCandidate}
+import org.ergoplatform.modifiers.history.extension.Extension.InterlinksVectorPrefix
+import org.ergoplatform.modifiers.history.header.Header
 import org.ergoplatform.nodeView.history.ErgoHistoryReader
 import org.ergoplatform.settings.Constants
 import scorex.crypto.authds.merkle.MerkleProof
@@ -85,8 +86,10 @@ class NipopowAlgos(powScheme: AutolykosPowScheme) {
     loop(links.zipWithIndex.toList, Seq.empty)
   }
 
-  @inline def interlinksToExtension(links: Seq[ModifierId]): ExtensionCandidate =
+  @inline
+  def interlinksToExtension(links: Seq[ModifierId]): ExtensionCandidate = {
     ExtensionCandidate(packInterlinks(links))
+  }
 
   /**
     * Computes max level (μ) of the given [[Header]], such that μ = log(T) − log(id(B))

@@ -1,6 +1,5 @@
 package org.ergoplatform.modifiers.history
 
-import io.circe.{Decoder, Encoder, HCursor}
 import io.circe.syntax._
 import io.circe.{Decoder, Encoder, HCursor}
 import org.ergoplatform.http.api.ApiCodecs
@@ -29,7 +28,7 @@ case class ADProofs(headerId: ModifierId,
 
   override type M = ADProofs
 
-  override lazy val serializer: ScorexSerializer[ADProofs] = ADProofSerializer
+  override lazy val serializer: ScorexSerializer[ADProofs] = ADProofsSerializer
 
   override def toString: String = s"ADProofs(Id:$id,HeaderId:$headerId)"
 
@@ -110,7 +109,7 @@ object ADProofs extends ApiCodecs {
   }
 }
 
-object ADProofSerializer extends ScorexSerializer[ADProofs] {
+object ADProofsSerializer extends ScorexSerializer[ADProofs] {
 
   override def serialize(obj: ADProofs, w: Writer): Unit = {
     w.putBytes(idToBytes(obj.headerId))
@@ -124,4 +123,5 @@ object ADProofSerializer extends ScorexSerializer[ADProofs] {
     val proofBytes = SerializedAdProof @@ r.getBytes(size)
     ADProofs(headerId, proofBytes, Some(size + Constants.ModifierIdSize))
   }
+
 }

@@ -1,7 +1,7 @@
 package org.ergoplatform.nodeView
 
 import org.ergoplatform.modifiers.ErgoPersistentModifier
-import org.ergoplatform.modifiers.history.Header
+import org.ergoplatform.modifiers.history.header.Header
 import org.ergoplatform.nodeView.history.ErgoHistory
 import scorex.core.DefaultModifiersCache
 import scorex.core.validation.MalformedModifierError

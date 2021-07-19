@@ -3,7 +3,7 @@ package org.ergoplatform.http.routes
 import akka.actor.ActorRef
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.testkit.{ScalatestRouteTest, RouteTestTimeout}
+import akka.http.scaladsl.testkit.{RouteTestTimeout, ScalatestRouteTest}
 import akka.pattern.ask
 import akka.testkit.TestDuration
 import akka.util.Timeout
@@ -15,7 +15,7 @@ import org.ergoplatform.local.ErgoStatsCollector.NodeInfo.difficultyEncoder
 import org.ergoplatform.local.ErgoStatsCollector.{GetNodeInfo, NodeInfo}
 import org.ergoplatform.local.ErgoStatsCollectorRef
 import org.ergoplatform.mining.difficulty.RequiredDifficulty
-import org.ergoplatform.modifiers.history.Header
+import org.ergoplatform.modifiers.history.header.Header
 import org.ergoplatform.nodeView.history.ErgoHistory.Difficulty
 import org.ergoplatform.utils.Stubs
 import org.scalatest.flatspec.AnyFlatSpec

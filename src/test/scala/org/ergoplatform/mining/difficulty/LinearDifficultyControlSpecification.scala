@@ -1,6 +1,6 @@
 package org.ergoplatform.mining.difficulty
 
-import org.ergoplatform.modifiers.history.Header
+import org.ergoplatform.modifiers.history.header.Header
 import org.ergoplatform.settings.ChainSettings
 import org.ergoplatform.utils.ErgoPropertyTest
 import org.scalacheck.{Arbitrary, Gen}
