@@ -209,7 +209,7 @@ class VerifyADHistorySpecification extends HistoryTestHelpers with NoShrink {
   property("syncInfo()") {
     val (history, chain) = genHistory(BlocksInChain)
 
-    val si = history.syncInfo
+    val si = history.syncInfo.asInstanceOf[ErgoSyncInfoV1]
     si.lastHeaderIds.last shouldEqual chain.last.header.id
   }
 

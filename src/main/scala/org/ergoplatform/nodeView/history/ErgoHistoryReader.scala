@@ -87,13 +87,20 @@ trait ErgoHistoryReader
     */
   def applicable(modifier: ErgoPersistentModifier): Boolean = applicableTry(modifier).isSuccess
 
+  override def compare(info: ErgoSyncInfo): HistoryComparisonResult = {
+    syncInfo match {
+      case syncV1: ErgoSyncInfoV1 => compareV1(syncV1)
+      case syncV2: ErgoSyncInfoV2 => ??? // todo: develop for v2
+    }
+  }
+
   /**
     * Whether another's node syncinfo shows that another node is ahead or behind ours
     *
     * @param info other's node sync info
     * @return Equal if nodes have the same history, Younger if another node is behind, Older if a new node is ahead
     */
-  override def compare(info: ErgoSyncInfo): HistoryComparisonResult = {
+  def compareV1(info: ErgoSyncInfoV1): HistoryComparisonResult = {
     bestHeaderIdOpt match {
       case Some(id) if info.lastHeaderIds.lastOption.contains(id) =>
         //Our best header is the same as other node best header
@@ -106,9 +113,15 @@ trait ErgoHistoryReader
         Younger
       case Some(_) =>
         //We are on different forks now.
-        if (info.lastHeaderIds.view.reverse.exists(m => contains(m) || m == PreGenesisHeader.id)) {
+        val commonHeaderIdOpt = info.lastHeaderIds.view.reverse.find(m => contains(m) || m == PreGenesisHeader.id)
+        if (commonHeaderIdOpt.isDefined) {
           //Return Younger, because we can send blocks from our fork that other node can download.
-          Fork
+          val commonHeaderId = commonHeaderIdOpt.get
+          if (commonHeaderId == PreGenesisHeader.id || isInBestChain(commonHeaderId)) {
+            Younger
+          } else {
+            Fork
+          }
         } else {
           //We don't have any of id's from other's node sync info in history.
           //We don't know whether we can sync with it and what blocks to send in Inv message.
@@ -132,7 +145,14 @@ trait ErgoHistoryReader
     * @param size max return size
     * @return Ids of headers, that node with info should download and apply to synchronize
     */
-  override def continuationIds(syncInfo: ErgoSyncInfo, size: Int): ModifierIds =
+  override def continuationIds(syncInfo: ErgoSyncInfo, size: Int): ModifierIds = {
+    syncInfo match {
+      case syncV1: ErgoSyncInfoV1 => continuationIdsV1(syncV1, size)
+      case syncV2: ErgoSyncInfoV2 => ??? // todo: develop for v2
+    }
+  }
+
+  def continuationIdsV1(syncInfo: ErgoSyncInfoV1, size: Int): ModifierIds =
     if (isEmpty) {
       // if no any header applied yet, return identifiers from other node's sync info
       syncInfo.startingPoints
@@ -188,13 +208,13 @@ trait ErgoHistoryReader
     * @return Node ErgoSyncInfo
     */
   override def syncInfo: ErgoSyncInfo = if (isEmpty) {
-    ErgoSyncInfo(Seq.empty)
+    ErgoSyncInfoV1(Seq.empty)
   } else {
     val startingPoints = lastHeaders(ErgoSyncInfo.MaxBlockIds).headers
     if (startingPoints.headOption.exists(_.isGenesis)) {
-      ErgoSyncInfo((PreGenesisHeader +: startingPoints).map(_.id))
+      ErgoSyncInfoV1((PreGenesisHeader +: startingPoints).map(_.id))
     } else {
-      ErgoSyncInfo(startingPoints.map(_.id))
+      ErgoSyncInfoV1(startingPoints.map(_.id))
     }
   }
 

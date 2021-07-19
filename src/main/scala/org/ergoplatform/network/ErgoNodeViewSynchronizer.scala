@@ -4,18 +4,22 @@ import akka.actor.{ActorRef, ActorRefFactory, Props}
 import org.ergoplatform.modifiers.history.Header
 import org.ergoplatform.modifiers.mempool.ErgoTransaction
 import org.ergoplatform.modifiers.{ErgoFullBlock, ErgoPersistentModifier}
+import org.ergoplatform.network.ErgoNodeViewSynchronizer.CheckModifiersToDownload
+import org.ergoplatform.nodeView.history.{ErgoHistory, ErgoSyncInfo, ErgoSyncInfoMessageSpec, ErgoSyncInfoV1, ErgoSyncInfoV2}
 import org.ergoplatform.network.ErgoNodeViewSynchronizer.{CheckModifiersToDownload, PeerSyncState}
 import org.ergoplatform.nodeView.history.{ErgoHistory, ErgoSyncInfo, ErgoSyncInfoMessageSpec}
 import org.ergoplatform.nodeView.mempool.ErgoMemPool
 import org.ergoplatform.settings.{Constants, ErgoSettings}
 import scorex.core.NodeViewHolder.ReceivableMessages.{ModifiersFromRemote, TransactionsFromRemote}
 import scorex.core.NodeViewHolder._
+import scorex.core.consensus.History.{Equal, Fork, Nonsense, Older, Unknown, Younger}
 import scorex.core.consensus.History._
 import scorex.core.network.ModifiersStatus.Requested
 import scorex.core.{ModifierTypeId, NodeViewModifier, PersistentNodeViewModifier, idsToString}
 import scorex.core.network.NetworkController.ReceivableMessages.SendToNetwork
-import scorex.core.network.NodeViewSynchronizer.ReceivableMessages.SemanticallySuccessfulModifier
+import scorex.core.network.NodeViewSynchronizer.ReceivableMessages.{SemanticallySuccessfulModifier, SendLocalSyncInfo}
 import scorex.core.network.message.{InvData, Message, ModifiersData}
+import scorex.core.network.{ConnectedPeer, ModifiersStatus, NodeViewSynchronizer, SendToRandom, SendToRandomFromChosen}
 import scorex.core.network.{ConnectedPeer, ModifiersStatus, NodeViewSynchronizer, SendToPeer}
 import scorex.core.serialization.ScorexSerializer
 import scorex.core.settings.NetworkSettings
@@ -59,6 +63,9 @@ class ErgoNodeViewSynchronizer(networkControllerRef: ActorRef,
   private val minHeadersPerBucket = 50 // minimum of headers to download by single peer
   private val maxHeadersPerBucket = 400 // maximum of headers to download by single peer
 
+  /**
+    * Register periodic events
+    */
   override def preStart(): Unit = {
     val toDownloadCheckInterval = networkSettings.syncInterval
     super.preStart()
@@ -89,8 +96,15 @@ class ErgoNodeViewSynchronizer(networkControllerRef: ActorRef,
       }
   }
 
-  //Processing sync info is coming from another node
   override protected def processSync(syncInfo: ErgoSyncInfo, remote: ConnectedPeer): Unit = {
+    syncInfo match {
+      case syncV1: ErgoSyncInfoV1 => processSyncV1(syncV1, remote)
+      case syncV2: ErgoSyncInfoV2 => ??? // todo:
+    }
+  }
+
+  //Processing sync info is coming from another node
+  protected def processSyncV1(syncInfo: ErgoSyncInfoV1, remote: ConnectedPeer): Unit = {
 
     historyReaderOpt match {
       case Some(historyReader) =>
@@ -212,6 +226,7 @@ class ErgoNodeViewSynchronizer(networkControllerRef: ActorRef,
     val typeId = data.typeId
     val modifiers = data.modifiers
     log.info(s"Got ${modifiers.size} modifiers of type $typeId from remote connected peer: $remote")
+    log.info("Modifier ids: " + modifiers.map(_._1))
     log.trace(s"Received modifier ids ${modifiers.keySet.map(encoder.encodeId).mkString(",")}")
 
     // filter out non-requested modifiers
