@@ -93,6 +93,95 @@ class ErgoTransactionSpec extends ErgoPropertyTest {
       "{\"id\":\"663ae91ab7145a4f42b5509e1a2fb0469b7cb46ea87fdfd90e0b4c8ef29c2493\",\"inputs\":[{\"boxId\":\"e76bf387ab2e63ba8f4e23267bc88265b5fee4950030199e2e2c214334251c64\",\"spendingProof\":{\"proofBytes\":\"\",\"extension\":{}}},{\"boxId\":\"2e9798d7eb0cd867f6dc29872f80de64c04cef10a99a58d007ef7855f0acbdb9\",\"spendingProof\":{\"proofBytes\":\"\",\"extension\":{}}}],\"dataInputs\":[{\"boxId\":\"f97d1dc4626de22db836270fe1aa004b99970791e4557de8f486f6d433b81195\"}],\"outputs\":[{\"boxId\":\"69e05b68715caaa4ca58ba59a8c8c7e031d42ad890b05f87021a28617c1e70d5\",\"value\":524940416256346,\"ergoTree\":\"0008cd02db0ce4d301d6dc0b7a5fbe749588ef4ef68f2c94435020a3c31764ffd36a2176\",\"assets\":[{\"tokenId\":\"6df03fffc9042bf0edb0d0d36d7a675239b83a9080d39716b9aa0a64cccb9963\",\"amount\":226153050},{\"tokenId\":\"e76bf387ab2e63ba8f4e23267bc88265b5fee4950030199e2e2c214334251c64\",\"amount\":536110126}],\"creationHeight\":0,\"additionalRegisters\":{},\"transactionId\":\"663ae91ab7145a4f42b5509e1a2fb0469b7cb46ea87fdfd90e0b4c8ef29c2493\",\"index\":0},{\"boxId\":\"556a9a3ec7880d468e56d44e75898cf8a32f6a07344895fa6b5cf34edf101a59\",\"value\":524940416256346,\"ergoTree\":\"0008cd02db0ce4d301d6dc0b7a5fbe749588ef4ef68f2c94435020a3c31764ffd36a2176\",\"assets\":[{\"tokenId\":\"6df03fffc9042bf0edb0d0d36d7a675239b83a9080d39716b9aa0a64cccb9963\",\"amount\":226153050},{\"tokenId\":\"e76bf387ab2e63ba8f4e23267bc88265b5fee4950030199e2e2c214334251c64\",\"amount\":536110126}],\"creationHeight\":0,\"additionalRegisters\":{},\"transactionId\":\"663ae91ab7145a4f42b5509e1a2fb0469b7cb46ea87fdfd90e0b4c8ef29c2493\",\"index\":1},{\"boxId\":\"16385b5b83992629909c7e004ed0421229ed3587162ce6f29b2df129472e3909\",\"value\":1016367755463674,\"ergoTree\":\"0008cd02db0ce4d301d6dc0b7a5fbe749588ef4ef68f2c94435020a3c31764ffd36a2176\",\"assets\":[],\"creationHeight\":0,\"additionalRegisters\":{},\"transactionId\":\"663ae91ab7145a4f42b5509e1a2fb0469b7cb46ea87fdfd90e0b4c8ef29c2493\",\"index\":2}],\"size\":329}")
   }
 
+  property("31-bytes long z value") {
+    /*
+box_id;tx_id;index;proof_bytes
+e4c066dc019767daf05266eb6f09fa1dd833422f199842582ba13dc7bdb651a8;d5942d536924d54178e95a06ef5256a9768b912332a659b7f1c285752e8b4ceb;0;c18ac0240928432db15dc915879583cb7ad7a634f3807073b294f0670c1d6f25814dadbbe7afe986893c7e8660dd3c4e86c1b1c5e029a8
+feb39a66c38677816d08a59e44f210d9942811e12569495bab856664f229cc15;f522ebac19d09232c370101792099c80d83b4877841ca883625717d0aabf3b1a;0;36110092d1bf698cd27b57d6eaa4ac32988fdf5a1c0b3a3090776908126127bb8e27a5f9ebbcb758f85a9eed413f549a10a634713105a1
+660dda9410dc07df6cf86f839ec879562aa38aea499bc2692141b343bfcc5d06;9285ff71d182bef1dc18fb1dc55dd14eaf4d34ad716e16da2baf0a3e75b42e79;0;d6d79c0b95a1764f42275c87e191e8a5e1c6e8cf49680702bdb99d7b5ea628aacbd00eb22b2e04d45f8c789f95bdc99a509bf0427234ba
+c296b61c04c2b0acadf3c6a6c7a3b658314ce60bc0fe78bd1e5fc6581d5b4d91;c64a71ccc3b9c6141711ec931c9544fc2f6c6d47872bd6d3cde24158a820bc68;0;1ebf1a24091ab89494e5f7e44445c91e94a0090516ce74e9a12d75eb30ac62fd047ac2e841217c1667034045a845bb8b67d489c12e851f
+3b0065d3ec18aecf7951b5fd26c3344731fe7625fcb223b46480c2951cfaa4fc;9f4d40607a561c14a504c96919362f150fca3337ab43219d9a683f1617b74b0a;0;6d4ae886951e35c04f328557cb3e1b3aa7376fa68a30e466bfb1afcb318f72785741ad035399bf3b683f062647966a547f6c4978a887d0
+aa9428a1709e1b35825145b9f331c06c9fcbf5ff8a270102e7cd279beeea1acd;c78f0757e946c97ad75672b4f0d2f56e6fc7e748360c6129a016edae8365b6af;0;f6f076859438d39dcd977e7e403c9b1362a0b51dfa9fc2e1c996d4413354c9b1a24bae220018c135d18611720ac3918f21f6f62740945a
+88005d9e557e34fbc50a0c1e259d85fe81ff7aef78457f6717b9dea3d86e3b1c;146020cd5e8d2a5e0863a1a50477bd5f96459e3c8509f8cc048071086046c5af;0;6a5f7e7ee68762b61a0e8b64e353f66d0be523b7bf8d56b662112ec47e32ec7183525c9851a608885a34051bc971d6c8600c88d8ce1713
+5242e0d7651df29834aa4138639b7db8d84c1a6c252e7ee14fd6fe3db7f6f664;f55ccfe3d56cd9f1e6510cd3bc726ae5a04bf903ce2a5a5602cd4d4175ebf1e1;0;84c2b4f8ddc9b2a16250fd9f104ca3c080fb15f77acffe5f1a2521bd4ab522e4820207943f68c2705b8de04e3559601d2a4dc7c701f462
+048d53c9c636702368bc1bf0f3e338ae2c1c78dab854d71d50e0aea58a1ed24d;4a98cb8d6568d2c40949c0f2197dc3bfdaa05b3a8009beb20e7c14c0782da9cc;0;d7ba05a6d843b2a781ea52f3f2e022644bae928631e3ed43dc220550716d44b84c0933c056d60b5a0becd72fe21b9fc5631ca658ad20f2
+ */
+    import io.circe.parser._
+
+    val ts = """{
+               |      "id": "d5942d536924d54178e95a06ef5256a9768b912332a659b7f1c285752e8b4ceb",
+               |      "inputs": [
+               |        {
+               |          "boxId": "e4c066dc019767daf05266eb6f09fa1dd833422f199842582ba13dc7bdb651a8",
+               |          "spendingProof": {
+               |            "proofBytes": "c18ac0240928432db15dc915879583cb7ad7a634f3807073b294f0670c1d6f25814dadbbe7afe986893c7e8660dd3c4e86c1b1c5e029a8",
+               |            "extension": {}
+               |          }
+               |        }
+               |      ],
+               |      "dataInputs": [],
+               |      "outputs": [
+               |        {
+               |          "boxId": "8b3ab6afc11f484546fc5d473d99fedd77331c632df3ac2a154af7412dceded7",
+               |          "value": 50000000000,
+               |          "ergoTree": "0008cd023276b8f770a45a55af95ca36ed79d2229b8567f09e04e3afdf459ab53c36f2fe",
+               |          "assets": [],
+               |          "creationHeight": 335388,
+               |          "additionalRegisters": {},
+               |          "transactionId": "d5942d536924d54178e95a06ef5256a9768b912332a659b7f1c285752e8b4ceb",
+               |          "index": 0
+               |        },
+               |        {
+               |          "boxId": "06f6e11219b1b27a262eb709a96e7d91ffd9316e419a60792bcb087a2af0dd11",
+               |          "value": 505063046902470,
+               |          "ergoTree": "0008cd02f40ee9cecf47e36a18645e5a3cff677772d74ee2792912173aa406fa9a8a2ef4",
+               |          "assets": [],
+               |          "creationHeight": 335388,
+               |          "additionalRegisters": {},
+               |          "transactionId": "d5942d536924d54178e95a06ef5256a9768b912332a659b7f1c285752e8b4ceb",
+               |          "index": 1
+               |        },
+               |        {
+               |          "boxId": "88c1ea9d5634ee85713d45897732414d2f6375bc9dd9274e05110cf8c13c52a6",
+               |          "value": 1000000,
+               |          "ergoTree": "1005040004000e36100204a00b08cd0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ea02d192a39a8cc7a701730073011001020402d19683030193a38cc7b2a57300000193c2b2a57301007473027303830108cdeeac93b1a57304",
+               |          "assets": [],
+               |          "creationHeight": 335388,
+               |          "additionalRegisters": {},
+               |          "transactionId": "d5942d536924d54178e95a06ef5256a9768b912332a659b7f1c285752e8b4ceb",
+               |          "index": 2
+               |        }
+               |      ],
+               |      "size": 301
+               |    }""".stripMargin
+    val t = ErgoTransaction.transactionDecoder.decodeJson(parse(ts).toOption.get).toOption.get
+
+    val is = """{
+               |          "boxId": "e4c066dc019767daf05266eb6f09fa1dd833422f199842582ba13dc7bdb651a8",
+               |          "value": 505113047902470,
+               |          "ergoTree": "0008cd02f40ee9cecf47e36a18645e5a3cff677772d74ee2792912173aa406fa9a8a2ef4",
+               |          "assets": [],
+               |          "creationHeight": 335377,
+               |          "additionalRegisters": {},
+               |          "transactionId": "3f788e8e31f11e2cd2ec9bc9df1f562caa177d4696f91d4f8cecda7fc3d2c3bd",
+               |          "index": 1
+               |        }""".stripMargin
+
+    val i = ErgoTransaction.ergoBoxDecoder.decodeJson(parse(is).toOption.get).toOption.get
+
+    implicit lazy val context: IRContext = new RuntimeIRContext
+    val verifier = new ErgoInterpreter(parameters)
+
+    val input = t.inputs.head
+    val proof = input.spendingProof
+    val transactionContext = TransactionContext(IndexedSeq(i), IndexedSeq.empty, t)
+    val inputContext = InputContext(0.toShort, proof.extension)
+
+    val ctx = new ErgoContext(emptyStateContext, transactionContext, inputContext, costLimit = 10000000, initCost = 0)
+
+    verifier.verify(i.ergoTree, ctx, proof, t.messageToSign).get._1 shouldBe true
+  }
+
   property("a valid transaction is valid") {
     forAll(validErgoTransactionGen) { case (from, tx) =>
       tx.statelessValidity().isSuccess shouldBe true
