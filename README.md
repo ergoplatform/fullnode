@@ -66,7 +66,8 @@ Node UI (graphical interface) could be accessed at `<node_ip>:<api_port>/panel` 
 
 ## Docker Quick Start
 
-Ergo has officially supported Docker package. To run last Ergo version in mainnet as a console application with logs printed to console:
+Ergo has officially supported Docker package. This is convenient to run Ergo on MacOS host (we don't currently support Ergo native on MacOS). 
+To run last Ergo version in mainnet as a console application with logs printed to console:
 
     sudo docker run --rm -p 9030:9030 -p 127.0.0.1:9053:9053 -v /path/on/host/to/ergo/data:/home/ergo/.ergo ergoplatform/ergo --mainnet
 
