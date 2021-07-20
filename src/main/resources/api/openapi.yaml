@@ -830,10 +830,17 @@ components:
       properties:
         scanName:
           type: string
+        removeOffchain:
+          type: boolean
+        walletInteraction:
+          type: string
+          enum: [off, shared, forced]
         trackingRule:
           $ref: '#/components/schemas/ScanningPredicate'
       example:
         scanName: Assets Tracker
+        walletInteraction: off
+        removeOffchain: true
         trackingRule:
           predicate: containsAsset
           assetId: 02dada811a888cd0dc7a0a41739a3ad9b0f427741fe6ca19700cf1a51200c96bf7
@@ -845,11 +852,18 @@ components:
           type: string
         scanId:
           type: integer
+        walletInteraction:
+          type: string
+          enum: [off, shared, forced]
+        removeOffchain:
+          type: boolean
         trackingRule:
           $ref: '#/components/schemas/ScanningPredicate'
       example:
         scanId: 2
         scanName: Assets Tracker
+        walletInteraction: off
+        removeOffchain: true
         trackingRule:
           predicate: containsAsset
           assetId: 02dada811a888cd0dc7a0a41739a3ad9b0f427741fe6ca19700cf1a51200c96bf7

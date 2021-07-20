@@ -43,8 +43,8 @@ class ScanApiRouteSpec extends AnyFlatSpec
   private val predicate0 = ContainsScanningPredicate(ErgoBox.R4, ByteArrayConstant(Array(0: Byte, 1: Byte)))
   private val predicate1 = ContainsScanningPredicate(ErgoBox.R4, ByteArrayConstant(Array(1: Byte, 1: Byte)))
 
-  val appRequest = ScanRequest("demo", predicate0, Some(ScanWalletInteraction.Off))
-  val appRequest2 = ScanRequest("demo2", predicate1, Some(ScanWalletInteraction.Off))
+  val appRequest = ScanRequest("demo", predicate0, Some(ScanWalletInteraction.Off), Some(false))
+  val appRequest2 = ScanRequest("demo2", predicate1, Some(ScanWalletInteraction.Off), None)
 
   it should "register a scan" in {
     Post(prefix + "/register", appRequest.asJson) ~> route ~> check {

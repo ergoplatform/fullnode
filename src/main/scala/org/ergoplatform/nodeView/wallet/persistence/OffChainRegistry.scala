@@ -1,6 +1,8 @@
 package org.ergoplatform.nodeView.wallet.persistence
 
 import org.ergoplatform.nodeView.history.ErgoHistory
+import org.ergoplatform.nodeView.wallet.scanning.Scan
+import org.ergoplatform.wallet.Constants
 import org.ergoplatform.wallet.Constants.PaymentsScanId
 import org.ergoplatform.wallet.boxes.TrackedBox
 
@@ -37,8 +39,17 @@ case class OffChainRegistry(height: Int,
   /**
     * Update on receiving new off-chain transaction.
     */
-  def updateOnTransaction(newBoxes: Seq[TrackedBox], spentIds: Seq[EncodedBoxId]): OffChainRegistry = {
-    val unspentCertain = offChainBoxes.filterNot(x => spentIds.contains(x.boxId)) ++ newBoxes
+  def updateOnTransaction(newBoxes: Seq[TrackedBox], spentIds: Seq[EncodedBoxId], scans: Seq[Scan]): OffChainRegistry = {
+    val unspentCertain = offChainBoxes.flatMap{x: TrackedBox =>
+      val spent = spentIds.contains(x.boxId)
+
+      if(x.scans.size > 1 || (x.scans.size == 1 && x.scans.head > Constants.PaymentsScanId)) {
+        val leave = scans.exists(s => x.scans.contains(s.scanId) && !s.removeOffchain)
+        if(leave) Some(x) else None
+      } else {
+        if(spent) None else Some(x)
+      }
+    } ++ newBoxes
     val onChainBalancesUpdated = onChainBalances.filterNot(x => spentIds.contains(x.id))
     this.copy(
       offChainBoxes = unspentCertain.distinct,

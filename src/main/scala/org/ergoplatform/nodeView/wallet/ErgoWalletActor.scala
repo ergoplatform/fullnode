@@ -180,7 +180,7 @@ class ErgoWalletActor(settings: ErgoSettings,
     case ScanOffChain(tx) =>
       val newWalletBoxes = WalletScanLogic.extractWalletOutputs(tx, None, state.walletVars)
       val inputs = WalletScanLogic.extractInputBoxes(tx)
-      val newState = state.copy(offChainRegistry = state.offChainRegistry.updateOnTransaction(newWalletBoxes, inputs))
+      val newState = state.copy(offChainRegistry = state.offChainRegistry.updateOnTransaction(newWalletBoxes, inputs, state.walletVars.externalScans))
       context.become(loadedWallet(newState))
 
     case ScanInThePast(blockHeight) =>

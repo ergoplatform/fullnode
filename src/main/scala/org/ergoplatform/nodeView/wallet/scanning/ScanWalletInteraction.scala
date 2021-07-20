@@ -8,6 +8,7 @@ package org.ergoplatform.nodeView.wallet.scanning
   *  * forced - box is always added to the wallet if it is added to the scan
   */
 object ScanWalletInteraction extends Enumeration {
+
   type ScanWalletInteraction = Value
 
   val Off = Value("off")
@@ -42,4 +43,5 @@ object ScanWalletInteraction extends Enumeration {
     * @return true if the box should be added to the p2pk wallet, false otherwise
     */
   def interactingWithWallet(v: Value): Boolean = v == Shared || v == Forced
+
 }
