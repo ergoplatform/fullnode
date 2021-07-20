@@ -4,13 +4,12 @@ on:
   push:
 jobs:
   test:
-    runs-on: ubuntu-latest
     strategy:
       matrix:
         os: [ubuntu-latest]
         scala: [2.12.10, 2.11.12]
         java: [adopt@1.8]
-      runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout current branch (full)
         uses: actions/checkout@v2
@@ -40,8 +39,8 @@ jobs:
       - name: Runs tests
         run: sbt -Denv=test clean test
 
-      - name: Publish a wallet snapshot ${{ github.ref }}
-        run: sbt ++${{ matrix.scala }} +ergoWallet/publish
-        env:
-          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+#      - name: Publish a wallet snapshot ${{ github.ref }}
+#        run: sbt ++${{ matrix.scala }} +ergoWallet/publish
+#        env:
+#          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+#          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
