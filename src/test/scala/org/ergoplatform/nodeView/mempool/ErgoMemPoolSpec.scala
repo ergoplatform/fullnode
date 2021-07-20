@@ -2,7 +2,6 @@ package org.ergoplatform.nodeView.mempool
 
 import org.ergoplatform.{ErgoBoxCandidate, Input}
 import org.ergoplatform.modifiers.mempool.ErgoTransaction
-import org.ergoplatform.nodeView.mempool.ErgoMemPool.ProcessingOutcome
 import org.ergoplatform.nodeView.state.wrapped.WrappedUtxoState
 import org.ergoplatform.utils.ErgoTestHelpers
 import org.ergoplatform.utils.generators.ErgoGenerators
@@ -26,7 +25,7 @@ class ErgoMemPoolSpec extends AnyFlatSpec
     val pool0 = ErgoMemPool.empty(settings)
     val poolAfter = txs.foldLeft(pool0) { case (pool, tx) =>
       val (p, outcome) = pool.process(tx, us)
-      if (outcome != ProcessingOutcome.Accepted) {
+      if (outcome != MempoolProcessingOutcome.Accepted) {
         throw new Exception("Transaction not accepted")
       }
       p
@@ -36,7 +35,7 @@ class ErgoMemPoolSpec extends AnyFlatSpec
     // light mode
     val poolLight = ErgoMemPool.empty(lightModeSettings)
     txs.foreach { tx =>
-      poolLight.process(tx, us)._2 shouldBe ProcessingOutcome.Accepted
+      poolLight.process(tx, us)._2 shouldBe MempoolProcessingOutcome.Accepted
     }
   }
 
@@ -50,7 +49,7 @@ class ErgoMemPoolSpec extends AnyFlatSpec
       pool = pool.putWithoutCheck(Seq(tx))
     }
     txs.foreach { tx =>
-      pool.process(tx, us)._2.isInstanceOf[ProcessingOutcome.Declined] shouldBe true
+      pool.process(tx, us)._2.isInstanceOf[MempoolProcessingOutcome.Declined] shouldBe true
     }
   }
 
@@ -85,16 +84,16 @@ class ErgoMemPoolSpec extends AnyFlatSpec
         val pool0 = ErgoMemPool.empty(settings)
         val (pool, tx1Outcome) = pool0.process(tx1, us)
 
-        tx1Outcome shouldBe ProcessingOutcome.Accepted
+        tx1Outcome shouldBe MempoolProcessingOutcome.Accepted
 
         // tx1 and tx2 are spending the same input, and paying the same fee.
         // So if tx2 is about a bigger or equal size, it should be rejected as it is paying less for a byte.
         // Otherwise, tx2 is paying more for a byte and then it is replacing tx1.
         if (tx2.size >= tx1.size) {
-          pool.process(tx2, us)._2.isInstanceOf[ProcessingOutcome.DoubleSpendingLoser] shouldBe true
+          pool.process(tx2, us)._2.isInstanceOf[MempoolProcessingOutcome.DoubleSpendingLoser] shouldBe true
         } else {
           val (updPool, outcome) = pool.process(tx2, us)
-          outcome shouldBe ProcessingOutcome.Accepted
+          outcome shouldBe MempoolProcessingOutcome.Accepted
           updPool.size shouldBe 1
           updPool.take(1).head.id shouldBe tx2.id
         }
@@ -108,7 +107,7 @@ class ErgoMemPoolSpec extends AnyFlatSpec
     forAll(invalidBlockTransactionsGen) { blockTransactions =>
       blockTransactions.txs.foreach(tx => pool = pool.process(tx, us)._1)
       blockTransactions.txs.foreach(tx =>
-        pool.process(tx, us)._2.isInstanceOf[ProcessingOutcome.Declined] shouldBe true)
+        pool.process(tx, us)._2.isInstanceOf[MempoolProcessingOutcome.Declined] shouldBe true)
     }
   }
 
@@ -122,8 +121,8 @@ class ErgoMemPoolSpec extends AnyFlatSpec
     val pool = ErgoMemPool.empty(maxSettings)
     txs.foreach { tx =>
       val (_, outcome) = pool.process(tx, us)
-      outcome.isInstanceOf[ProcessingOutcome.Declined] shouldBe true
-      outcome.asInstanceOf[ProcessingOutcome.Declined]
+      outcome.isInstanceOf[MempoolProcessingOutcome.Declined] shouldBe true
+      outcome.asInstanceOf[MempoolProcessingOutcome.Declined]
         .e.getMessage.contains("Min fee not met") shouldBe true
     }
 
@@ -131,7 +130,7 @@ class ErgoMemPoolSpec extends AnyFlatSpec
     val pool2 = ErgoMemPool.empty(minSettings)
     txs.foreach { tx =>
       val (_, outcome) = pool2.process(tx, us)
-      outcome shouldBe ProcessingOutcome.Accepted
+      outcome shouldBe MempoolProcessingOutcome.Accepted
     }
   }
 
@@ -139,7 +138,7 @@ class ErgoMemPoolSpec extends AnyFlatSpec
     val us = createUtxoState()._1
     val pool = ErgoMemPool.empty(settings)
     forAll(invalidBlockTransactionsGen) { blockTransactions =>
-      blockTransactions.txs.forall(pool.process(_, us)._2.isInstanceOf[ProcessingOutcome.Invalidated]) shouldBe true
+      blockTransactions.txs.forall(pool.process(_, us)._2.isInstanceOf[MempoolProcessingOutcome.Invalidated]) shouldBe true
     }
   }
 
@@ -183,7 +182,7 @@ class ErgoMemPoolSpec extends AnyFlatSpec
       val spendingBox = tx.outputs.head
       val (newPool, outcome) = pool.process(tx.copy(inputs = IndexedSeq(new Input(spendingBox.id, emptyProverResult)),
         outputCandidates = IndexedSeq(spendingBox)), us)
-      outcome shouldBe ProcessingOutcome.Accepted
+      outcome shouldBe MempoolProcessingOutcome.Accepted
       pool = newPool
     }
   }
@@ -205,7 +204,7 @@ class ErgoMemPoolSpec extends AnyFlatSpec
         val newTx = tx.copy(inputs = IndexedSeq(new Input(spendingBox.id, emptyProverResult)),
           outputCandidates = IndexedSeq(spendingBox))
         val (newPool, outcome) = pool.process(newTx, us)
-        outcome shouldBe ProcessingOutcome.Accepted
+        outcome shouldBe MempoolProcessingOutcome.Accepted
         pool = newPool
         newTx
       })
@@ -214,7 +213,7 @@ class ErgoMemPoolSpec extends AnyFlatSpec
     txs.foreach { tx =>
       val sb = tx.outputs.head
       pool.process(tx.copy(inputs = IndexedSeq(new Input(sb.id, emptyProverResult)),
-        outputCandidates = IndexedSeq(new ErgoBoxCandidate(sb.value+1, sb.ergoTree, sb.creationHeight, sb.additionalTokens, sb.additionalRegisters))), us)._2.isInstanceOf[ProcessingOutcome.Declined] shouldBe true
+        outputCandidates = IndexedSeq(new ErgoBoxCandidate(sb.value+1, sb.ergoTree, sb.creationHeight, sb.additionalTokens, sb.additionalRegisters))), us)._2.isInstanceOf[MempoolProcessingOutcome.Declined] shouldBe true
     }
   }
 
@@ -236,7 +235,7 @@ class ErgoMemPoolSpec extends AnyFlatSpec
         val newTx = tx.copy(inputs = IndexedSeq(new Input(spendingBox.id, emptyProverResult)),
           outputCandidates = IndexedSeq(spendingBox))
         val (newPool, outcome) = pool.process(newTx, us)
-        outcome shouldBe ProcessingOutcome.Accepted
+        outcome shouldBe MempoolProcessingOutcome.Accepted
         pool = newPool
         allTxs = allTxs :+ newTx
         newTx
@@ -273,7 +272,7 @@ class ErgoMemPoolSpec extends AnyFlatSpec
         val newTx = tx.copy(inputs = IndexedSeq(new Input(spendingBox.id, emptyProverResult)),
           outputCandidates = IndexedSeq(out0, out1))
         val (newPool, outcome) = pool.process(newTx, us)
-        outcome shouldBe ProcessingOutcome.Accepted
+        outcome shouldBe MempoolProcessingOutcome.Accepted
         pool = newPool
         newTx
       })
@@ -310,7 +309,7 @@ class ErgoMemPoolSpec extends AnyFlatSpec
         val newTx = tx.copy(inputs = IndexedSeq(new Input(spendingBox.id, emptyProverResult)),
           outputCandidates = IndexedSeq(spendingBox))
         val (newPool, outcome) = pool.process(newTx, us)
-        outcome shouldBe ProcessingOutcome.Accepted
+        outcome shouldBe MempoolProcessingOutcome.Accepted
         pool = newPool
         allTxs = allTxs :+ newTx
         newTx

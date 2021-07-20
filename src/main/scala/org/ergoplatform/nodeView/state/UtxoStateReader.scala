@@ -55,7 +55,10 @@ trait UtxoStateReader extends ErgoStateReader with TransactionValidation[ErgoTra
     * as soon as state (both UTXO set and state context) will change.
     *
     */
-  override def validate(tx: ErgoTransaction): Try[Unit] = validateWithCost(tx, None, Int.MaxValue).map(_ => Unit)
+  override def validate(tx: ErgoTransaction): Try[Unit] = {
+    val maxTxComplexity = constants.settings.nodeSettings.maxTransactionComplexity
+    validateWithCost(tx, None, maxTxComplexity).map(_ => Unit)
+  }
 
   /**
     *

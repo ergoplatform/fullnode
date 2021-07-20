@@ -10,11 +10,11 @@ import org.ergoplatform.nodeView.mempool.ErgoMemPool
 import org.ergoplatform.settings.{Constants, ErgoSettings}
 import scorex.core.NodeViewHolder.ReceivableMessages.{ModifiersFromRemote, TransactionsFromRemote}
 import scorex.core.NodeViewHolder._
-import scorex.core.consensus.History._
+import scorex.core.consensus.History.{Equal, Fork, Nonsense, Older, Unknown, Younger}
 import scorex.core.network.ModifiersStatus.Requested
 import scorex.core.{ModifierTypeId, NodeViewModifier, PersistentNodeViewModifier, idsToString}
 import scorex.core.network.NetworkController.ReceivableMessages.SendToNetwork
-import scorex.core.network.NodeViewSynchronizer.ReceivableMessages.SemanticallySuccessfulModifier
+import scorex.core.network.NodeViewSynchronizer.ReceivableMessages.{SemanticallySuccessfulModifier, SendLocalSyncInfo}
 import scorex.core.network.message.{InvData, Message, ModifiersData}
 import scorex.core.network.{ConnectedPeer, ModifiersStatus, NodeViewSynchronizer, SendToPeer}
 import scorex.core.serialization.ScorexSerializer
@@ -59,11 +59,15 @@ class ErgoNodeViewSynchronizer(networkControllerRef: ActorRef,
   private val minHeadersPerBucket = 50 // minimum of headers to download by single peer
   private val maxHeadersPerBucket = 400 // maximum of headers to download by single peer
 
+  /**
+    * Register periodic events
+    */
   override def preStart(): Unit = {
-    val toDownloadCheckInterval = networkSettings.syncInterval
     super.preStart()
+    val toDownloadCheckInterval = networkSettings.syncInterval
     context.system.eventStream.subscribe(self, classOf[DownloadRequest])
     context.system.scheduler.scheduleAtFixedRate(toDownloadCheckInterval, toDownloadCheckInterval, self, CheckModifiersToDownload)
+    context.system.scheduler.scheduleAtFixedRate(2.seconds, statusTracker.minInterval(), self, SendLocalSyncInfo)
   }
 
   private def downloadRequired(historyReader: ErgoHistory)(id: ModifierId): Boolean = {
@@ -71,7 +75,7 @@ class ErgoNodeViewSynchronizer(networkControllerRef: ActorRef,
   }
 
   /**
-    * Requests BlockSections with `Unknown` status that are defined by block headers but not downloaded yet.
+    * Requests BlockSections with `Unknown` status defined from block headers but not downloaded yet.
     * Trying to keep size of requested queue equals to `desiredSizeOfExpectingQueue`.
     */
   protected val onCheckModifiersToDownload: Receive = {
@@ -212,6 +216,7 @@ class ErgoNodeViewSynchronizer(networkControllerRef: ActorRef,
     val typeId = data.typeId
     val modifiers = data.modifiers
     log.info(s"Got ${modifiers.size} modifiers of type $typeId from remote connected peer: $remote")
+    log.info("Modifier ids: " + modifiers.map(_._1))
     log.trace(s"Received modifier ids ${modifiers.keySet.map(encoder.encodeId).mkString(",")}")
 
     // filter out non-requested modifiers
@@ -259,8 +264,6 @@ class ErgoNodeViewSynchronizer(networkControllerRef: ActorRef,
   }
 
   /**
-    * Currently just copy from private method in basic trait! Will be optimized in future likely.
-    *
     * Get modifiers from remote peer, filter out spam modifiers and penalize peer for spam
     *
     * @return ids and bytes of modifiers that were requested by our node

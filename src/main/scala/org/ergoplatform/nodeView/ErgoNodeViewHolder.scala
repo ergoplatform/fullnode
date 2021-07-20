@@ -8,10 +8,9 @@ import org.ergoplatform.modifiers.history._
 import org.ergoplatform.modifiers.mempool.ErgoTransaction
 import org.ergoplatform.modifiers.{ErgoFullBlock, ErgoPersistentModifier}
 import org.ergoplatform.nodeView.history.{ErgoHistory, ErgoHistoryReader, ErgoSyncInfo}
-import org.ergoplatform.nodeView.mempool.ErgoMemPool
-import org.ergoplatform.nodeView.mempool.ErgoMemPool.ProcessingOutcome
+import org.ergoplatform.nodeView.mempool.{ErgoMemPool, MempoolProcessingOutcome}
 import org.ergoplatform.nodeView.state._
-import org.ergoplatform.nodeView.wallet.{ErgoWallet, ErgoWalletReader}
+import org.ergoplatform.nodeView.wallet.ErgoWallet
 import org.ergoplatform.settings.{Algos, Constants, ErgoSettings}
 import org.ergoplatform.utils.FileUtils
 import scorex.core._
@@ -41,6 +40,7 @@ abstract class ErgoNodeViewHolder[State <: ErgoState[State]](settings: ErgoSetti
   override def preRestart(reason: Throwable, message: Option[Any]): Unit = {
     super.preRestart(reason, message)
     reason.printStackTrace()
+    log.error("ErgoNodeViewHolder crashed, reason: ", reason)
     System.exit(100) // this actor shouldn't be restarted at all so kill the whole app if that happened
   }
 
@@ -52,18 +52,18 @@ abstract class ErgoNodeViewHolder[State <: ErgoState[State]](settings: ErgoSetti
 
   override protected def txModify(tx: ErgoTransaction): Unit = {
     memoryPool().process(tx, minimalState()) match {
-      case (newPool, ProcessingOutcome.Accepted) =>
+      case (newPool, MempoolProcessingOutcome.Accepted) =>
         log.debug(s"Unconfirmed transaction $tx added to the memory pool")
         val newVault = vault().scanOffchain(tx)
         updateNodeView(updatedVault = Some(newVault), updatedMempool = Some(newPool))
         context.system.eventStream.publish(SuccessfulTransaction[ErgoTransaction](tx))
-      case (newPool, ProcessingOutcome.Invalidated(e)) =>
+      case (newPool, MempoolProcessingOutcome.Invalidated(e)) =>
         log.debug(s"Transaction $tx invalidated. Cause: ${e.getMessage}")
         updateNodeView(updatedMempool = Some(newPool))
         context.system.eventStream.publish(FailedTransaction(tx.id, e, immediateFailure = true))
-      case (_, ProcessingOutcome.DoubleSpendingLoser(winnerTxs)) => // do nothing
+      case (_, MempoolProcessingOutcome.DoubleSpendingLoser(winnerTxs)) => // do nothing
         log.debug(s"Transaction $tx declined, as other transactions $winnerTxs are paying more")
-      case (_, ProcessingOutcome.Declined(e)) => // do nothing
+      case (_, MempoolProcessingOutcome.Declined(e)) => // do nothing
         log.debug(s"Transaction $tx declined, reason: ${e.getMessage}")
     }
   }
