@@ -14,7 +14,7 @@ import scorex.core.serialization.{BytesSerializable, ScorexSerializer}
 import scorex.core.utils.ScorexEncoding
 import scorex.core.validation.{ModifierValidator, ValidationState}
 import scorex.crypto.authds.ADDigest
-import scorex.util.ScorexLogging
+import scorex.util.{ScorexLogging, ModifierId}
 import scorex.util.serialization.{Reader, Writer}
 import sigmastate.interpreter.CryptoConstants.EcPointType
 import special.collection.{Coll, CollOverArray}
@@ -100,6 +100,8 @@ class ErgoStateContext(val lastHeaders: Seq[Header],
   private def votingEpochLength: Int = votingSettings.votingLength
 
   def lastHeaderOpt: Option[Header] = lastHeaders.headOption
+
+  def lastHeaderIdOpt: Option[ModifierId] = lastHeaderOpt.map(_.id)
 
   override def serializer: ScorexSerializer[M] = ErgoStateContextSerializer(ergoSettings)
 

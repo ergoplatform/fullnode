@@ -29,7 +29,8 @@ case class NodeConfigurationSettings(stateType: StateType,
                                      rebroadcastCount: Int,
                                      minimalFeeAmount: Long,
                                      headerChainDiff: Int,
-                                     skipV1TransactionsValidation: Boolean = false) {
+                                     skipV1TransactionsValidation: Boolean = false,
+                                     collectMetrics: Boolean = false) {
   /**
     * Whether the node keeping all the full blocks of the blockchain or not.
     * @return true if the blockchain is pruned, false if not
@@ -61,7 +62,9 @@ trait NodeConfigurationReaders extends StateTypeReaders with ModifierIdReader {
       cfg.as[FiniteDuration](s"$path.mempoolCleanupDuration"),
       cfg.as[Int](s"$path.rebroadcastCount"),
       cfg.as[Long](s"$path.minimalFeeAmount"),
-      cfg.as[Int](s"$path.headerChainDiff")
+      cfg.as[Int](s"$path.headerChainDiff"),
+      cfg.as[Boolean](s"$path.skipV1TransactionsValidation"),
+      cfg.as[Boolean](s"$path.collectMetrics")
     )
   }
 

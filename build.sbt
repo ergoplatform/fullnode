@@ -63,6 +63,7 @@ libraryDependencies ++= Seq(
   "org.scalactic" %% "scalactic" % "3.0.3" % "test",
   "org.scalatest" %% "scalatest" % "3.1.1" % "test,it",
   "org.scalacheck" %% "scalacheck" % "1.14.+" % "test",
+  "com.lihaoyi" %% "pprint" % "0.5.4" % "test",  // the last version with Scala 2.11 support
   "org.scalatestplus" %% "scalatestplus-scalacheck" % "3.1.0.0-RC2" % Test,
   "org.scorexfoundation" %% "scorex-testkit" % scorexVersion % "test",
 

@@ -9,20 +9,21 @@ import org.ergoplatform.mining.groupElemFromBytes
 import org.ergoplatform.modifiers.ErgoPersistentModifier
 import org.ergoplatform.modifiers.history.Header
 import org.ergoplatform.modifiers.mempool.ErgoTransaction
-import org.ergoplatform.modifiers.state.{Insertion, Lookup, Removal, StateChanges}
+import org.ergoplatform.modifiers.state.{Insertion, Removal, Lookup, StateChanges}
 import org.ergoplatform.nodeView.history.ErgoHistory
 import org.ergoplatform.settings.ValidationRules._
-import org.ergoplatform.settings.{ChainSettings, Constants, ErgoSettings}
+import org.ergoplatform.settings.{Constants, ChainSettings, ErgoSettings}
+import org.ergoplatform.utils.metrics._
 import org.ergoplatform.wallet.interpreter.ErgoInterpreter
 import scorex.core.transaction.state.MinimalState
 import scorex.core.validation.ValidationResult.Valid
 import scorex.core.validation.{ModifierValidator, ValidationResult}
-import scorex.core.{VersionTag, idToVersion}
+import scorex.core.{idToVersion, VersionTag}
 import scorex.crypto.authds.{ADDigest, ADKey}
 import scorex.util.encode.Base16
-import scorex.util.{ModifierId, ScorexLogging, bytesToId}
+import scorex.util.{bytesToId, ScorexLogging, ModifierId}
 import sigmastate.AtLeast
-import sigmastate.Values.{ByteArrayConstant, ErgoTree, IntConstant, SigmaPropConstant}
+import sigmastate.Values.{ByteArrayConstant, SigmaPropConstant, ErgoTree, IntConstant}
 import sigmastate.basics.DLogProtocol.ProveDlog
 import sigmastate.serialization.ValueSerializer
 
@@ -78,6 +79,8 @@ object ErgoState extends ScorexLogging {
     StateChanges(toRemoveChanges, toInsertChanges, toLookup)
   }
 
+  val validateTxStatefulMetric = MetricDesc[TransactionMetricData]("validateTxStateful")
+
   /**
     * Tries to validate and execute transactions.
     *
@@ -88,6 +91,7 @@ object ErgoState extends ScorexLogging {
                       (checkBoxExistence: ErgoBox.BoxId => Try[ErgoBox]): ValidationResult[Long] = {
     import cats.implicits._
     implicit val verifier: ErgoInterpreter = ErgoInterpreter(currentStateContext.currentParameters)
+    implicit val es = currentStateContext.ergoSettings
 
     @tailrec
     def execTx(txs: List[ErgoTransaction], accCostTry: ValidationResult[Long]): ValidationResult[Long] = (txs, accCostTry) match {
@@ -100,24 +104,44 @@ object ErgoState extends ScorexLogging {
           .map(in => checkBoxExistence(in.boxId))
           .sequence
 
-        lazy val boxes: Try[(List[ErgoBox], List[ErgoBox])] = dataBoxesTry.flatMap(db => boxesToSpendTry.map(bs => (db, bs)))
+        lazy val boxes: Try[(List[ErgoBox], List[ErgoBox])] = dataBoxesTry
+          .flatMap(db => boxesToSpendTry.map(bs => (db, bs)))
 
-        val vs = tx.validateStateless()
+        val res = tx.validateStateless()
           .validateNoFailure(txBoxesToSpend, boxesToSpendTry)
           .validateNoFailure(txDataBoxes, dataBoxesTry)
           .payload[Long](r.value)
-          .validateTry(boxes, e => ModifierValidator.fatal("Missed data boxes", e)) { case (_, (dataBoxes, toSpend)) =>
-            tx.validateStateful(toSpend.toIndexedSeq, dataBoxes.toIndexedSeq, currentStateContext, r.value)(verifier).result
-          }
+          .validateTry(boxes, e => ModifierValidator.fatal("Missed data boxes", e)) {
+            case (_, (dataBoxes, toSpend)) =>
+              def validate(): ValidationResult[Long] = {
+                tx.validateStateful(
+                  toSpend.toIndexedSeq,
+                  dataBoxes.toIndexedSeq,
+                  currentStateContext, accumulatedCost = r.value)(verifier).result
+              }
 
-        execTx(tail, vs)
+              if (es.nodeSettings.collectMetrics) {
+                val (res, time) = measureTimeNano { validate() }
+                collectMetricsTo(
+                  validateTxStatefulMetric,
+                  TransactionMetricData(currentStateContext.lastHeaderIdOpt, tx.id),
+                  cost = res.map(c => c - r.value).toTry.getOrElse(-1L),
+                  time
+                )
+                res
+              } else {
+                validate()
+              }
+          }.result
+
+        execTx(tail, res)
       case _ =>
         accCostTry
     }
 
     // Skip v1 block transactions validation if corresponding setting is on
     if (currentStateContext.blockVersion == 1 &&
-          currentStateContext.ergoSettings.nodeSettings.skipV1TransactionsValidation) {
+          es.nodeSettings.skipV1TransactionsValidation) {
       Valid(0L)
     } else {
       execTx(transactions.toList, Valid[Long](0L))

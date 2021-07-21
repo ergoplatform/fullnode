@@ -6,6 +6,9 @@ devnet
 .ensime
 .ensime_cache/
 scorex.yaml
+metrics/.idea
+metrics/.ipynb_checkpoints
+metrics/venv
 
 # scala build folders
 target

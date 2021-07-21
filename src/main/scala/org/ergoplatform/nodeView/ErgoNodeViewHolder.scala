@@ -11,9 +11,10 @@ import org.ergoplatform.nodeView.history.{ErgoHistory, ErgoHistoryReader, ErgoSy
 import org.ergoplatform.nodeView.mempool.ErgoMemPool
 import org.ergoplatform.nodeView.mempool.ErgoMemPool.ProcessingOutcome
 import org.ergoplatform.nodeView.state._
-import org.ergoplatform.nodeView.wallet.{ErgoWallet, ErgoWalletReader}
-import org.ergoplatform.settings.{Algos, Constants, ErgoSettings}
-import org.ergoplatform.utils.FileUtils
+import org.ergoplatform.utils.metrics.CsvFileCollector
+import org.ergoplatform.nodeView.wallet.ErgoWallet
+import org.ergoplatform.settings.{Constants, Algos, ErgoSettings}
+import org.ergoplatform.utils.{metrics, FileUtils}
 import scorex.core._
 import scorex.core.network.NodeViewSynchronizer.ReceivableMessages.{FailedTransaction, SuccessfulTransaction}
 import scorex.core.settings.ScorexSettings
@@ -28,6 +29,8 @@ abstract class ErgoNodeViewHolder[State <: ErgoState[State]](settings: ErgoSetti
   private implicit lazy val actorSystem: ActorSystem = context.system
 
   override val scorexSettings: ScorexSettings = settings.scorexSettings
+
+  private lazy val metricsCollector = new CsvFileCollector(settings.directory + "/metrics")
 
   override type MS = State
   override type SI = ErgoSyncInfo
@@ -48,6 +51,15 @@ abstract class ErgoNodeViewHolder[State <: ErgoState[State]](settings: ErgoSetti
     log.warn("Stopping ErgoNodeViewHolder")
     history().closeStorage()
     minimalState().closeStorage()
+  }
+
+  override protected def pmodModify(pmod: ErgoPersistentModifier): Unit = {
+    if (settings.nodeSettings.collectMetrics)
+      metrics.executeWithCollector(metricsCollector) {
+        super.pmodModify(pmod)
+      }
+    else
+      super.pmodModify(pmod)
   }
 
   override protected def txModify(tx: ErgoTransaction): Unit = {
