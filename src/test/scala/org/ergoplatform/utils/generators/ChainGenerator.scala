@@ -1,22 +1,21 @@
 package org.ergoplatform.utils.generators
 
+import org.ergoplatform.Input
 import org.ergoplatform.mining.difficulty.LinearDifficultyControl
-import org.ergoplatform.modifiers.{BlockSection, ErgoFullBlock, ErgoPersistentModifier}
+import org.ergoplatform.modifiers.history.popow.{NipopowAlgos, PoPowHeader}
 import org.ergoplatform.modifiers.history.{Extension, ExtensionCandidate, Header, HeaderChain}
 import org.ergoplatform.modifiers.mempool.ErgoTransaction
-import org.ergoplatform.modifiers.history.popow.{NipopowAlgos, PoPowHeader}
+import org.ergoplatform.modifiers.{BlockSection, ErgoFullBlock, ErgoPersistentModifier}
 import org.ergoplatform.nodeView.history.ErgoHistory
 import org.ergoplatform.settings.Constants
 import org.ergoplatform.utils.{BoxUtils, ErgoTestConstants}
-import org.ergoplatform.Input
-import org.ergoplatform.{ErgoBox, Input}
 import scorex.core.block.Block.Version
 import scorex.crypto.authds.{ADKey, SerializedAdProof}
 import scorex.crypto.hash.Digest32
 import scorex.util.ModifierId
-import sigmastate.interpreter.{ContextExtension, ProverResult}
 import sigmastate.eval._
 import sigmastate.helpers.TestingHelpers._
+import sigmastate.interpreter.{ContextExtension, ProverResult}
 
 import scala.util.Random
 

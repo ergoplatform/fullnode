@@ -3,7 +3,9 @@ package org.ergoplatform.utils
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.StatusReply
 import org.bouncycastle.util.BigIntegers
-import org.ergoplatform.mining.{AutolykosSolution, ErgoMiner, WorkMessage}
+import org.ergoplatform.P2PKAddress
+import org.ergoplatform.mining.CandidateGenerator.Candidate
+import org.ergoplatform.mining.{AutolykosSolution, CandidateBlock, CandidateGenerator, ErgoMiner, WorkMessage}
 import org.ergoplatform.modifiers.ErgoFullBlock
 import org.ergoplatform.modifiers.history.Header
 import org.ergoplatform.modifiers.mempool.ErgoTransaction
@@ -13,20 +15,19 @@ import org.ergoplatform.nodeView.mempool.ErgoMemPool
 import org.ergoplatform.nodeView.state.wrapped.WrappedUtxoState
 import org.ergoplatform.nodeView.state.{DigestState, ErgoStateContext, StateType}
 import org.ergoplatform.nodeView.wallet.ErgoWalletActor._
+import org.ergoplatform.nodeView.wallet.ErgoWalletService.DeriveNextKeyResult
 import org.ergoplatform.nodeView.wallet._
 import org.ergoplatform.nodeView.wallet.persistence.WalletDigest
+import org.ergoplatform.nodeView.wallet.scanning.Scan
 import org.ergoplatform.sanity.ErgoSanity.HT
 import org.ergoplatform.settings.Constants.HashLength
-import org.ergoplatform.wallet.Constants.{PaymentsScanId, ScanId}
 import org.ergoplatform.settings._
 import org.ergoplatform.utils.generators.{ChainGenerator, ErgoGenerators, ErgoTransactionGenerators}
+import org.ergoplatform.wallet.Constants.{PaymentsScanId, ScanId}
 import org.ergoplatform.wallet.boxes.{ChainStatus, TrackedBox}
 import org.ergoplatform.wallet.interpreter.ErgoProvingInterpreter
-import org.ergoplatform.wallet.secrets.{DerivationPath, ExtendedSecretKey}
-import org.ergoplatform.P2PKAddress
-import org.ergoplatform.nodeView.wallet.ErgoWalletService.DeriveNextKeyResult
-import org.ergoplatform.nodeView.wallet.scanning.Scan
 import org.ergoplatform.wallet.mnemonic.Mnemonic
+import org.ergoplatform.wallet.secrets.{DerivationPath, ExtendedSecretKey}
 import org.scalacheck.Gen
 import scorex.core.app.Version
 import scorex.core.network.NetworkController.ReceivableMessages.GetConnectedPeers
@@ -40,7 +41,6 @@ import scorex.util.Random
 import sigmastate.basics.DLogProtocol.{DLogProverInput, ProveDlog}
 
 import scala.collection.mutable
-import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
@@ -84,7 +84,7 @@ trait Stubs extends ErgoGenerators with ErgoTestHelpers with ChainGenerator with
   val blacklistedPeers: Seq[String] = Seq("4.4.4.4:1111", "8.8.8.8:2222")
 
   val pk: ProveDlog = DLogProverInput(BigIntegers.fromUnsignedByteArray(Random.randomBytes(32))).publicImage
-  val externalCandidateBlock = WorkMessage(Array.fill(32)(2: Byte), BigInt(9999), None, pk, None)
+  val externalWorkMessage = WorkMessage(Array.fill(32)(2: Byte), BigInt(9999), None, pk, None)
 
   class PeersManagerStub extends Actor {
     def receive: Receive = {
@@ -99,11 +99,13 @@ trait Stubs extends ErgoGenerators with ErgoTestHelpers with ChainGenerator with
 
   class MinerStub extends Actor {
     def receive: Receive = {
-      case ErgoMiner.PrepareCandidate(_, reply) => if (reply) {
-        sender() ! StatusReply.success(externalCandidateBlock)
-      }
+      case CandidateGenerator.GenerateCandidate(_, reply) =>
+        if (reply) {
+          val candidate = Candidate(null, externalWorkMessage, Seq.empty) // API does not use CandidateBlock
+          sender() ! StatusReply.success(candidate)
+        }
       case _: AutolykosSolution => sender() ! StatusReply.success(())
-      case ErgoMiner.ReadMinerPk => sender() ! Some(pk)
+      case ErgoMiner.ReadMinerPk => sender() ! pk
     }
   }
 
@@ -144,7 +146,7 @@ trait Stubs extends ErgoGenerators with ErgoTestHelpers with ChainGenerator with
 
   class WalletActorStub extends Actor {
 
-    import WalletActorStub.{walletBoxN_N, walletBox10_10, walletBox20_30, walletBoxSpent21_31, walletTxs}
+    import WalletActorStub._
 
     private val prover: ErgoProvingInterpreter = defaultProver
     private val trackedAddresses: Seq[P2PKAddress] = prover.hdPubKeys.map(epk => P2PKAddress(epk.key))
@@ -339,7 +341,8 @@ trait Stubs extends ErgoGenerators with ErgoTestHelpers with ChainGenerator with
     val minimalSuffix = 2
     val complexityLimit = initSettings.nodeSettings.maxTransactionComplexity
     val nodeSettings: NodeConfigurationSettings = NodeConfigurationSettings(stateType, verifyTransactions, blocksToKeep,
-      PoPoWBootstrap, minimalSuffix, mining = false, complexityLimit, miningDelay, useExternalMiner = false, miningPubKeyHex = None,
+      PoPoWBootstrap, minimalSuffix, mining = false, complexityLimit, miningDelay, useExternalMiner = false,
+      internalMinersCount = 1, internalMinerPollingInterval = 1.second,miningPubKeyHex = None,
       offlineGeneration = false, 200, 100000, 100000, 1.minute, rebroadcastCount = 200, 1000000, 100)
     val scorexSettings: ScorexSettings = null
     val walletSettings: WalletSettings = null

@@ -383,7 +383,7 @@ class AutolykosPowScheme(val k: Int, val n: Int) extends ScorexLogging {
   def deriveExternalCandidate(blockCandidate: CandidateBlock,
                               pk: ProveDlog,
                               mandatoryTxIds: Seq[ModifierId]): WorkMessage = {
-    val headerCandidate = ErgoMiner.deriveUnprovenHeader(blockCandidate)
+    val headerCandidate = CandidateGenerator.deriveUnprovenHeader(blockCandidate)
     val msg = msgByHeader(headerCandidate)
     val b = getB(blockCandidate.nBits)
     val hOpt = if (blockCandidate.version == 1) {

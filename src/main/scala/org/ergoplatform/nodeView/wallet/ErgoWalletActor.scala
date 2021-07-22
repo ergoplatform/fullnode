@@ -22,6 +22,7 @@ import scorex.core.network.NodeViewSynchronizer.ReceivableMessages.{ChangedMempo
 import scorex.core.utils.ScorexEncoding
 import scorex.util.{ModifierId, ScorexLogging}
 import sigmastate.Values.SigmaBoolean
+import sigmastate.basics.DLogProtocol.{DLogProverInput, ProveDlog}
 
 import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
@@ -127,19 +128,21 @@ class ErgoWalletActor(settings: ErgoSettings,
       state.walletVars.trackedPubKeys.headOption match {
         case Some(pk) =>
           log.info(s"Loading pubkey for miner from cache")
-          sender() ! Some(pk.key)
+          sender() ! MiningPubKeyResponse(Some(pk.key))
         case None =>
           val pubKeyOpt = state.storage.readAllKeys().headOption.map(_.key)
           pubKeyOpt.foreach(_ => log.info(s"Loading pubkey for miner from storage"))
-          sender() ! state.storage.readAllKeys().headOption.map(_.key)
+          sender() ! MiningPubKeyResponse(state.storage.readAllKeys().headOption.map(_.key))
       }
 
     // read first wallet secret (used in miner only)
     case GetFirstSecret =>
       if (state.walletVars.proverOpt.nonEmpty) {
-        state.walletVars.proverOpt.foreach(_.hdKeys.headOption.foreach(s => sender() ! Success(s.privateInput)))
+        state.walletVars.proverOpt.foreach(_.hdKeys.headOption.foreach { secret =>
+          sender() ! FirstSecretResponse(Success(secret.privateInput))
+        })
       } else {
-        sender() ! Failure(new Exception("Wallet is locked"))
+        sender() ! FirstSecretResponse(Failure(new Exception("Wallet is locked")))
       }
 
     /*
@@ -643,9 +646,19 @@ object ErgoWalletActor extends ScorexLogging {
   case object GetFirstSecret
 
   /**
+    * Response with root secret key (used in miner)
+    */
+  case class FirstSecretResponse(secret: Try[DLogProverInput])
+
+  /**
     * Get mining public key
     */
   case object GetMiningPubKey
+
+  /**
+    * Response with mining public key
+    */
+  case class MiningPubKeyResponse(miningPubKeyOpt: Option[ProveDlog])
 
   /**
     * Get registered scans list

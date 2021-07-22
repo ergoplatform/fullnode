@@ -1,10 +1,8 @@
 package org.ergoplatform.tools
 
-import java.io.File
-
 import org.ergoplatform._
 import org.ergoplatform.mining.difficulty.RequiredDifficulty
-import org.ergoplatform.mining.{AutolykosPowScheme, CandidateBlock, ErgoMiner}
+import org.ergoplatform.mining.{AutolykosPowScheme, CandidateBlock, CandidateGenerator}
 import org.ergoplatform.modifiers.ErgoFullBlock
 import org.ergoplatform.modifiers.history.popow.NipopowAlgos
 import org.ergoplatform.modifiers.history.{Extension, ExtensionCandidate, Header}
@@ -18,6 +16,7 @@ import org.ergoplatform.wallet.boxes.{BoxSelector, ReplaceCompactCollectBoxSelec
 import scorex.util.ModifierId
 import sigmastate.basics.DLogProtocol.ProveDlog
 
+import java.io.File
 import scala.annotation.tailrec
 import scala.concurrent.duration._
 import scala.util.Try
@@ -59,7 +58,8 @@ object ChainGenerator extends App with ErgoTestHelpers {
   val complexityLimit = initSettings.nodeSettings.maxTransactionComplexity
   val nodeSettings: NodeConfigurationSettings = NodeConfigurationSettings(StateType.Utxo, verifyTransactions = true,
     -1, poPoWBootstrap = false, minimalSuffix, mining = false, complexityLimit, miningDelay, useExternalMiner = false,
-    miningPubKeyHex = None, offlineGeneration = false, 200, 100000, 100000, 1.minute, rebroadcastCount = 20, 1000000, 100)
+    internalMinersCount = 1, internalMinerPollingInterval = 1.second, miningPubKeyHex = None, offlineGeneration = false,
+    200, 100000, 100000, 1.minute, rebroadcastCount = 20, 1000000, 100)
   val ms = settings.chainSettings.monetary.copy(
     minerRewardDelay = RewardDelay
   )
@@ -188,7 +188,7 @@ object ChainGenerator extends App with ErgoTestHelpers {
       }
     }.getOrElse((interlinksExtension, Array(0: Byte, 0: Byte, 0: Byte), Header.InitialVersion))
 
-    val emissionTxOpt = ErgoMiner.collectEmission(state, minerPk, cs.emissionRules)
+    val emissionTxOpt = CandidateGenerator.collectEmission(state, minerPk, cs.emissionRules)
     val txs = emissionTxOpt.toSeq ++ txsFromPool
 
     state.proofsForTransactions(txs).map { case (adProof, adDigest) =>

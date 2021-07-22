@@ -65,6 +65,13 @@ class NonVerifyADHistorySpecification extends HistoryTestHelpers {
     }
   }
 
+  property("lastHeaders() should be sorted") {
+    forAll(smallInt) { m =>
+      val lastHeaderTimestamps = popowHistory.lastHeaders(m).headers.map(_.timestamp)
+      lastHeaderTimestamps shouldBe lastHeaderTimestamps.sorted
+    }
+  }
+
   property("History.isInBestChain") {
     var history = genHistory()
     val common = genHeaderChain(BlocksInChain, history, diffBitsOpt = None, useRealTs = false)

@@ -2,15 +2,14 @@ package org.ergoplatform.utils.generators
 
 import akka.actor.ActorRef
 import org.ergoplatform.ErgoBox
-import org.ergoplatform.mining.ErgoMiner
+import org.ergoplatform.mining.CandidateGenerator
 import org.ergoplatform.modifiers.ErgoFullBlock
 import org.ergoplatform.modifiers.history.popow.NipopowAlgos
 import org.ergoplatform.modifiers.history.{Extension, ExtensionCandidate, Header}
-import org.ergoplatform.modifiers.history.{ExtensionCandidate, Header, Extension}
 import org.ergoplatform.modifiers.mempool.ErgoTransaction
 import org.ergoplatform.nodeView.state._
 import org.ergoplatform.nodeView.state.wrapped.WrappedUtxoState
-import org.ergoplatform.settings.{Constants, Algos, LaunchParameters}
+import org.ergoplatform.settings.{Algos, Constants, LaunchParameters}
 import org.ergoplatform.utils.LoggingUtil
 import org.scalatest.matchers.should.Matchers
 import scorex.core.VersionTag
@@ -20,7 +19,7 @@ import scorex.testkit.TestkitHelpers
 import scorex.testkit.utils.FileUtils
 
 import scala.annotation.tailrec
-import scala.util.{Random, Success, Failure, Try}
+import scala.util.{Failure, Random, Success, Try}
 
 trait ValidBlocksGenerators
   extends TestkitHelpers with FileUtils with Matchers with ChainGenerator with ErgoTransactionGenerators {
@@ -77,7 +76,7 @@ trait ValidBlocksGenerators
         case Some(emissionBox) if currentSize < sizeLimit - averageSize =>
           // Extract money to anyoneCanSpend output and put emission to separate var to avoid it's double usage inside one block
           val currentHeight: Int = emissionBox.creationHeight.toInt
-          val rewards = ErgoMiner.collectRewards(Some(emissionBox), currentHeight, Seq.empty, defaultMinerPk, emission)
+          val rewards = CandidateGenerator.collectRewards(Some(emissionBox), currentHeight, Seq.empty, defaultMinerPk, emission)
           val outs = rewards.flatMap(_.outputs)
           val remainedBoxes = stateBoxes.filter(b => !isEmissionBox(b))
           createdEmissionBox = outs.filter(b => isEmissionBox(b))

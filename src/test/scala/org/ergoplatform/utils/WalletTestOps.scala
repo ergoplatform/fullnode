@@ -2,7 +2,7 @@ package org.ergoplatform.utils
 
 import org.ergoplatform.ErgoBox.TokenId
 import org.ergoplatform._
-import org.ergoplatform.mining.ErgoMiner
+import org.ergoplatform.mining.CandidateGenerator
 import org.ergoplatform.modifiers.ErgoFullBlock
 import org.ergoplatform.modifiers.mempool.ErgoTransaction
 import org.ergoplatform.nodeView.history.ErgoHistory
@@ -22,8 +22,6 @@ import sigmastate.eval.Extensions._
 import sigmastate.eval._
 import sigmastate.interpreter.ProverResult
 
-import scala.concurrent.blocking
-
 trait WalletTestOps extends NodeViewBaseOps {
 
   def newAssetIdStub: TokenId = Blake2b256.hash("new_asset")
@@ -35,9 +33,6 @@ trait WalletTestOps extends NodeViewBaseOps {
 
   def getPublicKeys(implicit w: WalletFixture): Seq[P2PKAddress] =
     await(w.wallet.publicKeys(0, Int.MaxValue))
-
-  def getSecret(implicit w: WalletFixture): Option[DLogProverInput] =
-    await(w.wallet.firstSecret).toOption
 
   def getConfirmedBalances(implicit w: WalletFixture): WalletDigest =
     await(w.wallet.confirmedBalances)
@@ -83,7 +78,7 @@ trait WalletTestOps extends NodeViewBaseOps {
   def makeGenesisTx(publicKey: ProveDlog, assetsIn: Seq[(TokenId, Long)] = Seq.empty): ErgoTransaction = {
     val inputs = IndexedSeq(new Input(genesisEmissionBox.id, emptyProverResult))
     val assets: Seq[(TokenId, Long)] = replaceNewAssetStub(assetsIn, inputs)
-    ErgoMiner.collectRewards(Some(genesisEmissionBox),
+    CandidateGenerator.collectRewards(Some(genesisEmissionBox),
       ErgoHistory.EmptyHistoryHeight,
       Seq.empty,
       publicKey,

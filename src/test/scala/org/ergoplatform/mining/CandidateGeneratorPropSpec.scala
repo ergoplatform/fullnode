@@ -11,7 +11,7 @@ import sigmastate.basics.DLogProtocol.ProveDlog
 
 import scala.util.Random
 
-class ErgoMinerPropSpec extends ErgoPropertyTest {
+class CandidateGeneratorPropSpec extends ErgoPropertyTest {
 
   val delta: Int = settings.chainSettings.monetary.minerRewardDelay
 
@@ -55,8 +55,8 @@ class ErgoMinerPropSpec extends ErgoPropertyTest {
     us.emissionBoxOpt should not be None
     val expectedReward = emission.minersRewardAtHeight(us.stateContext.currentHeight)
 
-    val incorrectTxs = ErgoMiner.collectEmission(us, proveDlogGen.sample.get, emission).toSeq
-    val txs = ErgoMiner.collectEmission(us, defaultMinerPk, emission).toSeq
+    val incorrectTxs = CandidateGenerator.collectEmission(us, proveDlogGen.sample.get, emission).toSeq
+    val txs = CandidateGenerator.collectEmission(us, defaultMinerPk, emission).toSeq
 
     txs.size shouldBe 1
     val emissionTx = txs.head
@@ -74,8 +74,8 @@ class ErgoMinerPropSpec extends ErgoPropertyTest {
     val height = us.stateContext.currentHeight
     val blockTx = validTransactionFromBoxes(bh.boxes.take(2).values.toIndexedSeq, outputsProposition = feeProp)
 
-    val txs = ErgoMiner.collectFees(height, Seq(blockTx), defaultMinerPk, emission).toSeq
-    val incorrect = ErgoMiner.collectFees(height, Seq(blockTx), proveDlogGen.sample.get, emission).toSeq
+    val txs = CandidateGenerator.collectFees(height, Seq(blockTx), defaultMinerPk, emission).toSeq
+    val incorrect = CandidateGenerator.collectFees(height, Seq(blockTx), proveDlogGen.sample.get, emission).toSeq
     txs.length shouldBe 1
     val feeTx = txs.head
     feeTx.outputs.length shouldBe 1
@@ -88,7 +88,7 @@ class ErgoMinerPropSpec extends ErgoPropertyTest {
 
   property("filter out double spend txs") {
     val tx = validErgoTransactionGen.sample.get._2
-    ErgoMiner.doublespend(Seq(tx), tx) shouldBe true
+    CandidateGenerator.doublespend(Seq(tx), tx) shouldBe true
 
     val inputs = validErgoTransactionGenTemplate(0, -1, 100).sample.get._1
     val (l, r) = inputs.splitAt(50)
@@ -96,11 +96,11 @@ class ErgoMinerPropSpec extends ErgoPropertyTest {
     val tx_2 = validTransactionFromBoxes(r :+ l.last) //conflicting with tx_1
     val tx_3 = validTransactionFromBoxes(r) //conflicting with tx_2, not conflicting with tx_1
 
-    ErgoMiner.doublespend(Seq(tx_1), tx_2) shouldBe true
-    ErgoMiner.doublespend(Seq(tx_1), tx_3) shouldBe false
-    ErgoMiner.doublespend(Seq(tx_1, tx_2), tx_1) shouldBe true
-    ErgoMiner.doublespend(Seq(tx_1, tx_2), tx_2) shouldBe true
-    ErgoMiner.doublespend(Seq(tx_1, tx_3), tx) shouldBe false
+    CandidateGenerator.doublespend(Seq(tx_1), tx_2) shouldBe true
+    CandidateGenerator.doublespend(Seq(tx_1), tx_3) shouldBe false
+    CandidateGenerator.doublespend(Seq(tx_1, tx_2), tx_1) shouldBe true
+    CandidateGenerator.doublespend(Seq(tx_1, tx_2), tx_2) shouldBe true
+    CandidateGenerator.doublespend(Seq(tx_1, tx_3), tx) shouldBe false
   }
 
   property("should only collect valid transactions") {
@@ -117,12 +117,12 @@ class ErgoMinerPropSpec extends ErgoPropertyTest {
       val upcomingContext = us.stateContext.upcoming(h.minerPk, h.timestamp, h.nBits, h.votes, emptyVSUpdate, h.version)
       upcomingContext.currentHeight shouldBe (us.stateContext.currentHeight + 1)
 
-      val fromSmallMempool = ErgoMiner.collectTxs(defaultMinerPk, maxCost, maxSize, Int.MaxValue, us, upcomingContext,
+      val fromSmallMempool = CandidateGenerator.collectTxs(defaultMinerPk, maxCost, maxSize, Int.MaxValue, us, upcomingContext,
         Seq(head))(validationSettingsNoIl)._1
       fromSmallMempool.size shouldBe 2
       fromSmallMempool.contains(head) shouldBe true
 
-      val fromBigMempool = ErgoMiner.collectTxs(defaultMinerPk, maxCost, maxSize, Int.MaxValue, us, upcomingContext,
+      val fromBigMempool = CandidateGenerator.collectTxs(defaultMinerPk, maxCost, maxSize, Int.MaxValue, us, upcomingContext,
         txsWithFees)(validationSettingsNoIl)._1
 
       val newBoxes = fromBigMempool.flatMap(_.outputs)
@@ -168,7 +168,7 @@ class ErgoMinerPropSpec extends ErgoPropertyTest {
     val txBoxes = bh.boxes.grouped(inputsNum).map(_.values.toIndexedSeq).toSeq
 
     val blockTx = validTransactionFromBoxes(txBoxes(0), outputsProposition = feeProposition)
-    val txs = ErgoMiner.collectFees(height, Seq(blockTx), defaultMinerPk, emissionRules).toSeq
+    val txs = CandidateGenerator.collectFees(height, Seq(blockTx), defaultMinerPk, emissionRules).toSeq
     val block = validFullBlock(None, us, blockTx +: txs)
 
     us = us.applyModifier(block).get
@@ -200,7 +200,7 @@ class ErgoMinerPropSpec extends ErgoPropertyTest {
     forAll(Gen.nonEmptyListOf(validErgoTransactionGenTemplate(0, propositionGen = feeProp))) { btxs =>
       val blockTxs = btxs.map(_._2)
       val height = ErgoHistory.EmptyHistoryHeight
-      val txs = ErgoMiner.collectRewards(us.emissionBoxOpt, height, blockTxs, defaultMinerPk, emission)
+      val txs = CandidateGenerator.collectRewards(us.emissionBoxOpt, height, blockTxs, defaultMinerPk, emission)
       txs.length shouldBe 2
 
       val emissionTx = txs.head

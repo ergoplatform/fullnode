@@ -79,7 +79,7 @@ case class ErgoWalletState(
   def getChangeAddress(implicit addrEncoder: ErgoAddressEncoder): Option[P2PKAddress] = walletVars.proverOpt.map { prover =>
     storage.readChangeAddress
       .getOrElse {
-        log.info("Change address not specified. Using root address from wallet.")
+        log.debug("Change address not specified. Using root address from wallet.")
         P2PKAddress(prover.hdPubKeys.head.key)
       }
   }
